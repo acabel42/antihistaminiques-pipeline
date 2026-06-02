@@ -6,12 +6,13 @@ os.makedirs('data/gold', exist_ok=True)
 
 def build_features_pollen():
     print("Feature engineering pollen...")
-    
-    pollen = pd.read_csv('data/silver/J0_silver_cams_pollen_2023_2026.csv', low_memory=False)
-    meteo  = pd.read_csv('data/silver/J0_silver_meteo_2023_2026.csv')
+
+    pollen = pd.read_csv('data/silver/J0_silver_pollen_2021_2026.csv')
+    meteo  = pd.read_csv('data/silver/J0_silver_meteo_openmeteo_2021_2026.csv')
 
     pollen['date'] = pd.to_datetime(pollen['date'])
-    meteo['time']  = pd.to_datetime(meteo['time'])
+    meteo['time']  = pd.to_datetime(meteo['time'], format='mixed')
+    meteo['time']  = meteo['time'].dt.normalize()
 
     # Agréger pollen par date
     pollen_daily = pollen.groupby('date').agg(
@@ -40,7 +41,7 @@ def build_features_pollen():
     pollen_daily['jour_annee']       = pollen_daily['date'].dt.dayofyear
     pollen_daily['saison_allergies'] = pollen_daily['mois'].apply(lambda m: 1 if m in [4,5,6,7] else 0)
 
-    # Météo nationale
+    # Météo nationale Open-Meteo 2021-2026
     meteo_daily = meteo.groupby('time').agg(
         temp_moy=('temperature_2m_mean','mean'),
         temp_max=('temperature_2m_max','mean'),
@@ -49,11 +50,13 @@ def build_features_pollen():
     ).reset_index().rename(columns={'time':'date'})
 
     # Fusion
-    df = pollen_daily.merge(meteo_daily, on='date', how='inner')
+    df = pollen_daily.merge(meteo_daily, on='date', how='left')
     df = df.dropna(subset=['gram_lag7'])
 
     df.to_csv('data/gold/pollen_meteo_features.csv', index=False)
     print(f"  pollen_meteo_features : {df.shape}")
+    print(f"  Periode : {df['date'].min().date()} -> {df['date'].max().date()}")
+    print(f"  Nulls : {df.isnull().sum().sum()}")
     return df
 
 if __name__ == '__main__':

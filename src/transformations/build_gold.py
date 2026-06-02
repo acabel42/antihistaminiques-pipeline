@@ -15,15 +15,15 @@ def build_gold():
     pollen['date'] = pd.to_datetime(pollen['date'])
     rup['date_evenement'] = pd.to_datetime(rup['date_evenement'], errors='coerce')
 
-    rup_r06a = rup[rup['est_antihistaminique']==True].copy()
-    rup_r06a['annee_mois_str'] = rup_r06a['date_evenement'].dt.to_period('M').astype(str)
-    rup_agg = rup_r06a.groupby('annee_mois_str').agg(
+    rup_r06 = rup[rup['code_atc'].str.startswith('R06', na=False)].copy()
+    rup_r06['annee_mois_str'] = rup_r06['date_evenement'].dt.to_period('M').astype(str)
+    rup_agg = rup_r06.groupby('annee_mois_str').agg(
         nb_ruptures=('classification', lambda x: (x=='rupture').sum()),
         nb_risques= ('classification', lambda x: (x=='risque').sum()),
     ).reset_index()
 
-    # Variable cible — tension OU rupture
-    rup_agg['target_rupture'] = (rup_agg['nb_risques'] > 0).astype(int)
+    # Variable cible — rupture OU tension R06
+    rup_agg['target_rupture'] = ((rup_agg['nb_ruptures'] + rup_agg['nb_risques']) > 0).astype(int)
 
     pollen['annee_mois_str'] = pollen['date'].dt.to_period('M').astype(str)
     pollen_mois = pollen.groupby('annee_mois_str').agg(
@@ -54,8 +54,7 @@ def build_gold():
     gold.to_sql('gold_ml', ENGINE, if_exists='replace', index=False)
 
     print(f"  gold_ml : {gold.shape}")
-    print(f"  Colonnes : {gold.columns.tolist()}")
-    print(f"  Mois avec tension/rupture : {gold['target_rupture'].sum()}")
+    print(f"  Mois avec rupture/tension R06 : {gold['target_rupture'].sum()}")
     return gold
 
 if __name__ == '__main__':
