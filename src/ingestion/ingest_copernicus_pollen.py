@@ -39,3 +39,4 @@ if __name__ == '__main__':
             f'{annee}-01-01', f'{annee}-12-31',
             f'data/raw/cams_pollen_{annee}_france.nc',
             f'data/raw/cams_pollen_{annee}_france.csv')
+        

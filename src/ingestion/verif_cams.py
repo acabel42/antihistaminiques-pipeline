@@ -10,4 +10,5 @@ for annee in ['2023','2024','2025','2026']:
         print(f'FORECAST   : {ds.attrs.get("FORECAST", "?")}')
         print(f'Taille     : {round(os.path.getsize(path)/1024/1024,1)} Mo')
     else:
-        print(f'\n=== {annee} === fichier non disponible')
+        print(f'\n=== {annee} === fichier non disponible')cd /Users/nellyta/Jedha
+
