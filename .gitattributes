@@ -7,3 +7,4 @@
 /src/J0_silver_atmo_pollen_2025_2026.csv filter=lfs diff=lfs merge=lfs -text
 /src/J0_silver_rnsa_pollen.csv filter=lfs diff=lfs merge=lfs -text
 /data/silver/J0_silver_atmo_pollen_2025_2026.csv filter=lfs diff=lfs merge=lfs -text
+/notebooks/eda_pollen_meteo.ipynb filter=lfs diff=lfs merge=lfs -text
