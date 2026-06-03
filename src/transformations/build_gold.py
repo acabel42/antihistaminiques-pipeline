@@ -2,8 +2,11 @@ import pandas as pd
 from sqlalchemy import create_engine
 import os
 
-ENGINE = create_engine('postgresql://pipeline:pipeline2026@localhost:5432/antihistaminiques')
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+os.chdir(ROOT)
 os.makedirs('data/gold', exist_ok=True)
+
+ENGINE = create_engine('postgresql://pipeline:pipeline2026@localhost:5432/antihistaminiques')
 
 def build_gold():
     print("Construction table Gold...")
@@ -24,21 +27,18 @@ def build_gold():
     ).reset_index()
     rup_agg['target_rupture'] = ((rup_agg['nb_ruptures'] + rup_agg['nb_risques']) > 0).astype(int)
 
-    # Pollen par mois — features enrichies
+    # Pollen par mois
     pollen['annee_mois_str'] = pollen['date'].dt.to_period('M').astype(str)
     pollen_mois = pollen.groupby('annee_mois_str').agg(
-        # Graminees
         gram_moy=('graminees','mean'),
         gram_max=('graminees','max'),
         gram_roll7=('gram_roll7','mean'),
         gram_roll30=('gram_roll30','mean'),
         nb_jours_pic=('flag_pic_pollen','sum'),
-        # Autres taxons
         bouleau_moy=('bouleau','mean'),
         ambroisie_moy=('ambroisie','mean'),
         nb_jours_pic_bouleau=('flag_pic_bouleau','sum'),
         nb_jours_pic_ambroisie=('flag_pic_ambroisie','sum'),
-        # Meteo
         temp_moy=('temp_moy','mean'),
         temp_max=('temp_max','mean'),
         temp_min=('temp_min','mean'),
@@ -46,7 +46,6 @@ def build_gold():
         precip=('precip','mean'),
         precip_lag7=('precip_lag7','mean'),
         wind=('wind','mean'),
-        # Temporel
         mois=('mois','first'),
         annee=('annee','first'),
         saison_allergies=('saison_allergies','first'),
@@ -76,5 +75,4 @@ def build_gold():
     return gold
 
 if __name__ == '__main__':
-    os.chdir('/Users/nellyta/Jedha')
     build_gold()

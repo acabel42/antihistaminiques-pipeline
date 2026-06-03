@@ -9,15 +9,15 @@ from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.metrics import (r2_score, mean_squared_error,
                              classification_report, confusion_matrix, roc_auc_score)
 
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+os.chdir(ROOT)
 os.makedirs('models', exist_ok=True)
 
-# Regressor — features pollen + meteo de base
 FEATURES_REG = [
     'gram_moy', 'gram_max', 'gram_roll7', 'nb_jours_pic',
     'temp_moy', 'precip', 'mois', 'saison_allergies'
 ]
 
-# Classifier — features enrichies avec nouveaux taxons + source_encoded
 FEATURES_CLF = [
     'gram_moy', 'gram_max', 'gram_roll7', 'gram_roll30', 'nb_jours_pic',
     'bouleau_moy', 'ambroisie_moy', 'nb_jours_pic_bouleau',
@@ -144,5 +144,4 @@ def train_model():
     print("  models/rf_classifier.joblib — detection rupture/tension R06")
 
 if __name__ == '__main__':
-    os.chdir('/Users/nellyta/Jedha')
     train_model()
