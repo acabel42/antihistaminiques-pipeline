@@ -15,3 +15,5 @@ J0_silver_openmedic_2021_2025.csv
 old/
 J0_silver_rnsa_pollen.csv
 old/Power BI Dataset/
+.cache.sqlite
+python
