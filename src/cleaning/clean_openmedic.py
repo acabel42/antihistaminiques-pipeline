@@ -3,8 +3,7 @@ from sqlalchemy import create_engine
 
 # ── Connexion à la base PostgreSQL ───────────────────────────────────────────
 # On crée le "moteur" de connexion avec les identifiants du docker-compose.yml
-# localhost:5433 car on a changé le port pour éviter le conflit
-ENGINE = create_engine("postgresql://pipeline:pipeline2026@localhost:5433/antihistaminiques")
+ENGINE = create_engine("postgresql://pipeline:pipeline2026@127.0.0.1:5432/antihistaminiques")
 
 # ── Chemins vers les fichiers Silver ─────────────────────────────────────────
 PATH_OPENMEDIC = "data/silver/J0_silver_openmedic_2021_2025.csv"
