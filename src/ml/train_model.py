@@ -11,18 +11,28 @@ from sklearn.metrics import (r2_score, mean_squared_error,
 
 os.makedirs('models', exist_ok=True)
 
+# Regressor — features pollen + meteo de base
+FEATURES_REG = [
+    'gram_moy', 'gram_max', 'gram_roll7', 'nb_jours_pic',
+    'temp_moy', 'precip', 'mois', 'saison_allergies'
+]
+
+# Classifier — features enrichies avec nouveaux taxons + source_encoded
+FEATURES_CLF = [
+    'gram_moy', 'gram_max', 'gram_roll7', 'gram_roll30', 'nb_jours_pic',
+    'bouleau_moy', 'ambroisie_moy', 'nb_jours_pic_bouleau',
+    'temp_moy', 'temp_max', 'temp_roll30',
+    'precip', 'wind',
+    'mois', 'saison_allergies', 'source_encoded'
+]
+
 def train_regressor(df):
     print("\n=== MODELE 1 — Regression gram_moy mois suivant ===")
     df = df.copy().sort_values('annee_mois_str').reset_index(drop=True)
     df['gram_moy_next'] = df['gram_moy'].shift(-1)
-    df = df.dropna(subset=['gram_moy_next'])
+    df = df.dropna(subset=['gram_moy_next'] + FEATURES_REG)
 
-    features = [
-        'gram_moy', 'gram_max', 'gram_roll7', 'nb_jours_pic',
-        'temp_moy', 'precip', 'mois', 'saison_allergies'
-    ]
-
-    X = df[features]
+    X = df[FEATURES_REG]
     y = df['gram_moy_next']
 
     X_train, X_test, y_train, y_test = train_test_split(
@@ -38,6 +48,9 @@ def train_regressor(df):
     print(f"  R²   : {r2:.3f}")
     print(f"  RMSE : {rmse:.3f} grains/m3")
 
+    cv = cross_val_score(rf_reg, X, y, cv=5, scoring='r2')
+    print(f"  R² CV (5-fold) : {cv.mean():.3f} +/- {cv.std():.3f}")
+
     fig, axes = plt.subplots(1, 2, figsize=(14, 5))
     fig.suptitle('RF Regressor — Prediction graminees mois suivant', fontsize=13, fontweight='bold')
 
@@ -50,7 +63,7 @@ def train_regressor(df):
     axes[0].grid(True, alpha=0.3)
 
     imp = pd.DataFrame({
-        'feature': features,
+        'feature': FEATURES_REG,
         'importance': rf_reg.feature_importances_
     }).sort_values('importance', ascending=True)
     axes[1].barh(imp['feature'], imp['importance'], color='steelblue')
@@ -68,13 +81,8 @@ def train_regressor(df):
 def train_classifier(df):
     print("\n=== MODELE 2 — Classification rupture/tension R06 ===")
 
-    features = [
-        'gram_moy', 'gram_max', 'gram_roll7', 'nb_jours_pic',
-        'temp_moy', 'precip', 'mois', 'saison_allergies'
-    ]
-
-    df_clf = df.dropna(subset=features + ['target_rupture'])
-    X = df_clf[features]
+    df_clf = df.dropna(subset=FEATURES_CLF + ['target_rupture'])
+    X = df_clf[FEATURES_CLF]
     y = df_clf['target_rupture']
 
     print(f"  Target : {y.value_counts().to_dict()}")
@@ -93,6 +101,9 @@ def train_classifier(df):
     print(classification_report(y_test, y_pred, zero_division=0))
     print(f"  ROC-AUC : {roc_auc_score(y_test, y_prob):.3f}")
 
+    cv = cross_val_score(rf_clf, X, y, cv=5, scoring='f1_weighted')
+    print(f"  F1 CV (5-fold) : {cv.mean():.3f} +/- {cv.std():.3f}")
+
     fig, axes = plt.subplots(1, 2, figsize=(14, 5))
     fig.suptitle('RF Classifier — Detection rupture/tension R06', fontsize=13, fontweight='bold')
 
@@ -103,7 +114,7 @@ def train_classifier(df):
     axes[0].set_ylabel('Reel')
 
     imp = pd.DataFrame({
-        'feature': features,
+        'feature': FEATURES_CLF,
         'importance': rf_clf.feature_importances_
     }).sort_values('importance', ascending=True)
     axes[1].barh(imp['feature'], imp['importance'], color='coral')
@@ -122,6 +133,8 @@ def train_model():
     print("Chargement Gold...")
     df = pd.read_csv('data/gold/gold_ml.csv')
     print(f"  Shape : {df.shape}")
+    print(f"  Features regressor  : {len(FEATURES_REG)}")
+    print(f"  Features classifier : {len(FEATURES_CLF)}")
 
     rf_reg, df_reg = train_regressor(df)
     rf_clf = train_classifier(df)
