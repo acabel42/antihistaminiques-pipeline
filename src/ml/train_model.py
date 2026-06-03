@@ -18,21 +18,14 @@ FEATURES_REG = [
     'temp_moy', 'precip', 'mois', 'saison_allergies'
 ]
 
-FEATURES_CLASSIFIER = [
-    # Pollen
+FEATURES_CLF = [
     'gram_moy', 'gram_max', 'gram_roll7', 'gram_roll30', 'nb_jours_pic',
     'bouleau_moy', 'ambroisie_moy', 'nb_jours_pic_bouleau',
-    # Météo
-    'temp_moy', 'temp_max', 'temp_roll30', 'precip', 'wind',
-    # Temporel
-    'mois', 'annee', 'saison_allergies',
-    # Consommation
-    'boites_total',
-    # Historique tensions — lag uniquement, pas nb_ruptures/nb_risques !
-    'ruptures_lag1',
-    'source_encoded'
+    'temp_moy', 'temp_max', 'temp_roll30',
+    'precip', 'wind',
+    'mois', 'saison_allergies', 'source_encoded',
+    'ruptures_lag1', 'gram_lag_mois', 'cumul_thermique'
 ]
-FEATURES_CLF = FEATURES_CLASSIFIER
 
 def train_regressor(df):
     print("\n=== MODELE 1 — Regression gram_moy mois suivant ===")
@@ -89,11 +82,15 @@ def train_regressor(df):
 def train_classifier(df):
     print("\n=== MODELE 2 — Classification rupture/tension R06 ===")
 
-    df_clf = df.dropna(subset=FEATURES_CLF + ['target_rupture'])
-    X = df_clf[FEATURES_CLF]
+    # Utiliser seulement les features disponibles
+    features_disponibles = [f for f in FEATURES_CLF if f in df.columns]
+
+    df_clf = df.dropna(subset=features_disponibles + ['target_rupture'])
+    X = df_clf[features_disponibles]
     y = df_clf['target_rupture']
 
     print(f"  Target : {y.value_counts().to_dict()}")
+    print(f"  Features utilisees : {len(features_disponibles)}")
 
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=42, stratify=y)
@@ -122,7 +119,7 @@ def train_classifier(df):
     axes[0].set_ylabel('Reel')
 
     imp = pd.DataFrame({
-        'feature': FEATURES_CLF,
+        'feature': features_disponibles,
         'importance': rf_clf.feature_importances_
     }).sort_values('importance', ascending=True)
     axes[1].barh(imp['feature'], imp['importance'], color='coral')
@@ -139,10 +136,10 @@ def train_classifier(df):
 
 def train_model():
     print("Chargement Gold...")
-    df = pd.read_csv('data/gold/gold_ml_advanced.csv')
+    gold_path = 'data/gold/gold_ml_advanced.csv' if os.path.exists('data/gold/gold_ml_advanced.csv') else 'data/gold/gold_ml.csv'
+    df = pd.read_csv(gold_path)
+    print(f"  Fichier Gold : {gold_path}")
     print(f"  Shape : {df.shape}")
-    print(f"  Features regressor  : {len(FEATURES_REG)}")
-    print(f"  Features classifier : {len(FEATURES_CLF)}")
 
     rf_reg, df_reg = train_regressor(df)
     rf_clf = train_classifier(df)
