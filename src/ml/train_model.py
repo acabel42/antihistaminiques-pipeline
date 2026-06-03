@@ -18,13 +18,22 @@ FEATURES_REG = [
     'temp_moy', 'precip', 'mois', 'saison_allergies'
 ]
 
-FEATURES_CLF = [
+FEATURES_CLASSIFIER = [
+    # Pollen
     'gram_moy', 'gram_max', 'gram_roll7', 'gram_roll30', 'nb_jours_pic',
     'bouleau_moy', 'ambroisie_moy', 'nb_jours_pic_bouleau',
-    'temp_moy', 'temp_max', 'temp_roll30',
-    'precip', 'wind',
-    'mois', 'saison_allergies', 'source_encoded'
+    # Météo
+    'temp_moy', 'temp_max', 'temp_roll30', 'precip', 'wind',
+    # Temporel
+    'mois', 'annee', 'saison_allergies',
+    # Consommation
+    'boites_total',
+    # Historique tensions ← ajoute ces 3
+    'nb_ruptures', 'nb_risques', 'ruptures_lag1',
+    # Encodage source
+    'source_encoded'
 ]
+FEATURES_CLF = FEATURES_CLASSIFIER
 
 def train_regressor(df):
     print("\n=== MODELE 1 — Regression gram_moy mois suivant ===")
