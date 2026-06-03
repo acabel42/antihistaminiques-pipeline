@@ -2,7 +2,7 @@ import pandas as pd
 from sqlalchemy import create_engine
 
 # ── Connexion PostgreSQL ──────────────────────────────────────────────────────
-ENGINE = create_engine("postgresql://pipeline:pipeline2026@localhost:5433/antihistaminiques")
+ENGINE = create_engine("postgresql://pipeline:pipeline2026@127.0.0.1:5432/antihistaminiques")
 
 # ── Chemin vers le fichier Silver ─────────────────────────────────────────────
 PATH_OPENMEDIC = "data/silver/J0_silver_openmedic_2021_2025.csv"
