@@ -5,6 +5,7 @@ import os
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.metrics import (r2_score, mean_squared_error,
                              classification_report, confusion_matrix, roc_auc_score)
@@ -26,6 +27,28 @@ FEATURES_CLF = [
     'mois', 'saison_allergies', 'source_encoded',
     'ruptures_lag1', 'gram_lag_mois', 'cumul_thermique'
 ]
+
+def train_baseline(df):
+    print("\n=== BASELINE — Regression Logistique ===")
+    features_base = ['gram_moy', 'temp_moy', 'precip', 'mois']
+    df_b = df.dropna(subset=features_base + ['target_rupture'])
+    X = df_b[features_base]
+    y = df_b['target_rupture']
+
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42, stratify=y)
+
+    lr = LogisticRegression(class_weight='balanced', random_state=42, max_iter=1000)
+    lr.fit(X_train, y_train)
+    y_pred = lr.predict(X_test)
+    y_prob = lr.predict_proba(X_test)[:, 1]
+
+    print(classification_report(y_test, y_pred, zero_division=0))
+    print(f"  ROC-AUC Baseline : {roc_auc_score(y_test, y_prob):.3f}")
+
+    joblib.dump(lr, 'models/lr_baseline.joblib')
+    print("  Modele sauvegarde : models/lr_baseline.joblib")
+    return lr
 
 def train_regressor(df):
     print("\n=== MODELE 1 — Regression gram_moy mois suivant ===")
@@ -82,7 +105,6 @@ def train_regressor(df):
 def train_classifier(df):
     print("\n=== MODELE 2 — Classification rupture/tension R06 ===")
 
-    # Utiliser seulement les features disponibles
     features_disponibles = [f for f in FEATURES_CLF if f in df.columns]
 
     df_clf = df.dropna(subset=features_disponibles + ['target_rupture'])
@@ -141,10 +163,12 @@ def train_model():
     print(f"  Fichier Gold : {gold_path}")
     print(f"  Shape : {df.shape}")
 
+    lr_baseline = train_baseline(df)
     rf_reg, df_reg = train_regressor(df)
     rf_clf = train_classifier(df)
 
     print("\n=== PIPELINE ML TERMINE ===")
+    print("  models/lr_baseline.joblib   — regression logistique baseline")
     print("  models/rf_regressor.joblib  — prediction graminees mois suivant")
     print("  models/rf_classifier.joblib — detection rupture/tension R06")
 
