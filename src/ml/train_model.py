@@ -28,9 +28,8 @@ FEATURES_CLASSIFIER = [
     'mois', 'annee', 'saison_allergies',
     # Consommation
     'boites_total',
-    # Historique tensions ← ajoute ces 3
-    'nb_ruptures', 'nb_risques', 'ruptures_lag1',
-    # Encodage source
+    # Historique tensions — lag uniquement, pas nb_ruptures/nb_risques !
+    'ruptures_lag1',
     'source_encoded'
 ]
 FEATURES_CLF = FEATURES_CLASSIFIER
@@ -140,7 +139,7 @@ def train_classifier(df):
 
 def train_model():
     print("Chargement Gold...")
-    df = pd.read_csv('data/gold/gold_ml.csv')
+    df = pd.read_csv('data/gold/gold_ml_advanced.csv')
     print(f"  Shape : {df.shape}")
     print(f"  Features regressor  : {len(FEATURES_REG)}")
     print(f"  Features classifier : {len(FEATURES_CLF)}")
