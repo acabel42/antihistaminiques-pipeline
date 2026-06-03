@@ -3,11 +3,14 @@ import numpy as np
 import os
 
 def build_features_advanced():
+    ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+    os.chdir(ROOT)
+    
     df = pd.read_csv('data/gold/gold_ml.csv')
     df['annee_mois_dt'] = pd.to_datetime(df['annee_mois_str'])
     df = df.sort_values('annee_mois_dt').reset_index(drop=True)
 
-    # Cumul thermique — somme temperatures depuis janvier
+    # Cumul thermique
     df['cumul_thermique'] = df['temp_moy'] * 30
 
     # Lags graminees
@@ -29,6 +32,4 @@ def build_features_advanced():
     return df
 
 if __name__ == '__main__':
-    ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-    os.chdir(ROOT)
     build_features_advanced()
