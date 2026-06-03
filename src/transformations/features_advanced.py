@@ -5,7 +5,7 @@ import os
 def build_features_advanced():
     ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
     os.chdir(ROOT)
-    
+
     df = pd.read_csv('data/gold/gold_ml.csv')
     df['annee_mois_dt'] = pd.to_datetime(df['annee_mois_str'])
     df = df.sort_values('annee_mois_dt').reset_index(drop=True)
@@ -14,8 +14,8 @@ def build_features_advanced():
     df['cumul_thermique'] = df['temp_moy'] * 30
 
     # Lags graminees
-    df['gram_lag_mois']  = df['gram_moy'].shift(1)
-    df['gram_lag_2mois'] = df['gram_moy'].shift(2)
+    df['gram_lag_mois']  = df['gram_moy'].shift(1).fillna(0)
+    df['gram_lag_2mois'] = df['gram_moy'].shift(2).fillna(0)
 
     # Rolling mean 3 mois
     df['gram_roll3m'] = df['gram_moy'].rolling(3, min_periods=1).mean()
@@ -26,9 +26,12 @@ def build_features_advanced():
     # Tendance ruptures
     df['ruptures_lag1'] = df['nb_ruptures'].shift(1).fillna(0)
 
-    df = df.dropna(subset=['gram_lag_mois'])
-    df.to_csv('data/gold/gold_ml.csv', index=False)
-    print(f'Gold enrichi : {df.shape}')
+    # Supprimer colonne temporaire
+    df = df.drop(columns=['annee_mois_dt'])
+
+    # Sauvegarder dans un fichier séparé — gold_ml.csv reste propre
+    df.to_csv('data/gold/gold_ml_advanced.csv', index=False)
+    print(f'Gold advanced : {df.shape}')
     return df
 
 if __name__ == '__main__':
