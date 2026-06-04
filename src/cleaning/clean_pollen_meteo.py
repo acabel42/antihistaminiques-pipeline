@@ -2,7 +2,9 @@ import pandas as pd
 from sqlalchemy import create_engine
 import os
 
-ENGINE = create_engine('postgresql://pipeline:pipeline2026@localhost:5432/antihistaminiques')
+from dotenv import load_dotenv
+load_dotenv()
+ENGINE = create_engine(os.getenv('DB_URL'))
 
 def clean_pollen():
     print("Nettoyage pollen...")
