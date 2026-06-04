@@ -18,8 +18,9 @@ def clean_pollen():
         df[col] = df[col].clip(lower=0)
     df['longitude'] = df['longitude'].apply(lambda x: x-360 if x > 180 else x)
     print(f"  Shape : {df.shape} | Nulls : {df.isnull().sum().sum()}")
-    df.to_sql('pollen', ENGINE, if_exists='replace', index=False, chunksize=10000)
-    print(f"  Charge dans PostgreSQL : table pollen")
+    # Table pollen trop volumineuse pour Neon Free (512MB) — CSV uniquement
+    # df.to_sql('pollen', ENGINE, if_exists='replace', index=False, chunksize=10000)
+    print(f"  Pollen conserve en CSV (13.7M lignes > limite Neon 512MB)")
     return df
 
 def clean_meteo():

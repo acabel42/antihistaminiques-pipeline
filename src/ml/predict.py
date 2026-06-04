@@ -10,7 +10,9 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(mess
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 os.chdir(ROOT)
 
-ENGINE = create_engine('postgresql://pipeline:pipeline2026@localhost:5432/antihistaminiques')
+from dotenv import load_dotenv
+load_dotenv()
+ENGINE = create_engine(os.getenv('DB_URL', 'postgresql://pipeline:pipeline2026@localhost:5432/antihistaminiques'))
 
 FEATURES_CLF = [
     'gram_moy', 'gram_max', 'gram_roll7', 'gram_roll30', 'nb_jours_pic',

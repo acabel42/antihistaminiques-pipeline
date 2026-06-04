@@ -20,7 +20,16 @@ log = logging.getLogger(__name__)
 def run():
     log.info('=== PIPELINE ANTIHISTAMINIQUES - DEBUT ===')
 
-    # ETAPE 1 — Nettoyage Silver
+    # ETAPE 1 - Nettoyage Silver
+    log.info('Etape 1 - Nettoyage medicaments + ruptures')
+    try:
+        from src.cleaning.clean_medicaments_ruptures import clean_and_load
+        clean_and_load()
+        log.info('OK - medicaments + ruptures')
+    except Exception as e:
+        log.error(f'ERREUR etape 1 medicaments : {e}')
+        raise
+
     log.info('Etape 1 - Nettoyage OpenMedic + BDPM')
     try:
         from src.cleaning.clean_openmedic import clean_openmedic, clean_bdpm
@@ -41,7 +50,7 @@ def run():
         log.error(f'ERREUR etape 1 pollen/meteo : {e}')
         raise
 
-    # ETAPE 1b — Feature engineering pollen
+    # ETAPE 1b - Feature engineering pollen
     log.info('Etape 1b - Feature engineering pollen')
     try:
         from src.transformations.features_pollen import build_features_pollen
@@ -51,7 +60,7 @@ def run():
         log.error(f'ERREUR etape 1b features_pollen : {e}')
         raise
 
-    # ETAPE 2 — Construction Gold
+    # ETAPE 2 - Construction Gold
     log.info('Etape 2 - Construction gold_ml.csv')
     try:
         from src.transformations.build_gold import build_gold
@@ -70,7 +79,7 @@ def run():
         log.error(f'ERREUR etape 2 features_advanced : {e}')
         raise
 
-    # ETAPE 2b — Load OLAP
+    # ETAPE 2b - Load OLAP
     log.info('Etape 2b - Chargement OLAP PostgreSQL')
     try:
         from src.transformations.load_olap import load_olap
@@ -80,7 +89,7 @@ def run():
         log.error(f'ERREUR etape 2b load_olap : {e}')
         raise
 
-    # ETAPE 3 — Entrainement ML
+    # ETAPE 3 - Entrainement ML
     log.info('Etape 3 - Entrainement des modeles ML')
     try:
         from src.ml.train_model import train_model
@@ -90,7 +99,7 @@ def run():
         log.error(f'ERREUR etape 3 train_model : {e}')
         raise
 
-    # ETAPE 4 — Predictions
+    # ETAPE 4 - Predictions
     log.info('Etape 4 - Generation predictions')
     try:
         from src.ml.predict import predict
