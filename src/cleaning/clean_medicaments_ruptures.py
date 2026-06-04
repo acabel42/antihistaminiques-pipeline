@@ -1,18 +1,10 @@
 import pandas as pd
-from sqlalchemy import create_engine
-
 import os
+from sqlalchemy import create_engine
 from dotenv import load_dotenv
+
 load_dotenv()
 ENGINE = create_engine(os.getenv('DB_URL'))
-
-ENGINE = create_engine('postgresql://pipeline:pipeline2026@localhost:5432/antihistaminiques')
-
-def clean_and_load():
-    # â”€â”€ MÃ©dicaments â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    df_med = pd.read_csv('data/silver/J0_silver_medicaments.csv')
-    df_med = df_med.dropna(how='all')
-    df_med = df_med.drop_duplicates()
 
 def clean_and_load():
     # ── Médicaments ──────────────────────────────────────────
