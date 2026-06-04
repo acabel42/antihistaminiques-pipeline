@@ -99,12 +99,13 @@ def run():
         log.error(f'ERREUR etape 3 train_model : {e}')
         raise
 
-    # ETAPE 4 - Predictions
+   # ETAPE 4 — Predictions
     log.info('Etape 4 - Generation predictions')
     try:
         from src.ml.predict import predict
-        predict()
-        log.info('OK - gold_predictions genere')
+        for classe in ['R06', 'R03', 'J01']:
+            predict(classe_atc=classe)
+            log.info(f'OK - gold_predictions_{classe} genere')
     except Exception as e:
         log.error(f'ERREUR etape 4 predict : {e}')
         raise
