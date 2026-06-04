@@ -1,45 +1,56 @@
 import pandas as pd
 import os
+from datetime import datetime
 
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+os.chdir(ROOT)
 os.makedirs('data/silver', exist_ok=True)
 
-# Charger RNSA 2021-2022
-rnsa = pd.read_csv('data/silver/J0_silver_rnsa_2021_2022.csv')
-rnsa['date'] = pd.to_datetime(rnsa['date'])
+DATE = datetime.now().strftime('%Y%m%d')
 
-# Charger CAMS 2023-2026
-cams = pd.read_csv('data/silver/J0_silver_cams_pollen_2023_2026.csv', low_memory=False)
-cams['date'] = pd.to_datetime(cams['date'])
+rnsa = pd.read_csv('data/silver/J0_silver_rnsa_pollen.csv')
 
-# Agréger CAMS par date (moyenne nationale)
-cams_daily = cams.groupby('date').agg(
-    graminees_conc=('graminees_conc', 'mean'),
-    bouleau_conc=('bouleau_conc',     'mean'),
-    aulne_conc=('aulne_conc',         'mean'),
-    ambroisie_conc=('ambroisie_conc', 'mean'),
-    armoise_conc=('armoise_conc',     'mean'),
-    olivier_conc=('olivier_conc',     'mean'),
+rnsa_2122 = rnsa[rnsa['annee'].isin([2021, 2022])].copy()
+
+mapping = {
+    'GRAMINEE': 'graminees',
+    'BETULA':   'bouleau',
+    'ALNUS':    'aulne',
+    'AMBROSIA': 'ambroisie',
+    'ARTEMISI': 'armoise',
+    'OLEA':     'olivier',
+    'CUPRESSA': 'autres',
+    'FRAXINUS': 'autres',
+    'PLATANUS': 'autres',
+    'CORYLUS':  'autres',
+    'ULMUS':    'autres',
+}
+
+rnsa_2122['taxon_harmonise'] = rnsa_2122['taxon'].map(mapping)
+
+rnsa_agg = rnsa_2122.groupby(['date', 'taxon_harmonise']).agg(
+    concentration=('concentration_totale', 'mean')
 ).reset_index()
-cams_daily['autres_conc'] = 0.0
-cams_daily['source']      = 'CAMS'
-cams_daily['annee']       = cams_daily['date'].dt.year
 
-# Aligner les colonnes
-cols = ['date','graminees_conc','bouleau_conc','aulne_conc',
-        'ambroisie_conc','armoise_conc','olivier_conc',
-        'autres_conc','source','annee']
+rnsa_pivot = rnsa_agg.pivot_table(
+    index='date',
+    columns='taxon_harmonise',
+    values='concentration',
+    aggfunc='mean'
+).reset_index()
 
-rnsa  = rnsa[cols]
-cams_daily = cams_daily[cols]
+rnsa_pivot.columns.name = None
+rnsa_pivot.columns = ['date'] + [f'{c}_conc' for c in rnsa_pivot.columns[1:]]
+rnsa_pivot['date']      = pd.to_datetime(rnsa_pivot['date'])
+rnsa_pivot['source']    = 'RNSA'
+rnsa_pivot['annee']     = rnsa_pivot['date'].dt.year
+rnsa_pivot['loaded_at'] = DATE
 
-# Fusionner
-combined = pd.concat([rnsa, cams_daily], ignore_index=True)
-combined  = combined.sort_values('date').reset_index(drop=True)
+print(f"Shape : {rnsa_pivot.shape}")
+print(f"Colonnes : {rnsa_pivot.columns.tolist()}")
+print(f"Periode : {rnsa_pivot['date'].min().date()} -> {rnsa_pivot['date'].max().date()}")
 
-print(f"Shape finale : {combined.shape}")
-print(f"Période      : {combined['date'].min().date()} -> {combined['date'].max().date()}")
-print(f"Sources      : {combined['source'].value_counts().to_dict()}")
-print(combined.head(3).to_string())
-
-combined.to_csv('data/silver/J0_silver_pollen_2021_2026.csv', index=False)
-print("\nSauvegarde : J0_silver_pollen_2021_2026.csv")
+# Sauvegarde horodatee + fichier courant
+rnsa_pivot.to_csv(f'data/silver/J0_silver_rnsa_2021_2022_{DATE}.csv', index=False)
+rnsa_pivot.to_csv('data/silver/J0_silver_rnsa_2021_2022.csv', index=False)
+print(f"Sauvegarde : J0_silver_rnsa_2021_2022.csv — Date : {DATE}")

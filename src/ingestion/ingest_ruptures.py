@@ -1,7 +1,12 @@
 import pandas as pd
 import os
+from datetime import datetime
 
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+os.chdir(ROOT)
 os.makedirs('data/silver', exist_ok=True)
+
+DATE = datetime.now().strftime('%Y%m%d')
 
 def categorise_cause(cause):
     c = str(cause).lower()
@@ -41,6 +46,9 @@ df['mois']  = df['date'].dt.month
 df['trimestre'] = df['date'].dt.quarter
 df['saison_allergies'] = df['mois'].apply(lambda m: 1 if m in [3,4,5,6] else 0)
 df['cause_categorie'] = df['cause'].apply(categorise_cause)
+df['loaded_at'] = DATE
 
+# Sauvegarde horodatee + fichier courant
+df.to_csv(f'data/silver/J0_silver_ruptures_{DATE}.csv', index=False)
 df.to_csv('data/silver/J0_silver_ruptures.csv', index=False)
-print(f'Shape : {df.shape} — R06A : {df.est_antihistaminique.sum()}')
+print(f'Shape : {df.shape} — R06A : {df.est_antihistaminique.sum()} — Date : {DATE}')

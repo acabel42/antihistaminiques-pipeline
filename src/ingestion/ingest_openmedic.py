@@ -1,8 +1,12 @@
 import pandas as pd
 import os
-import glob
+from datetime import datetime
 
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+os.chdir(ROOT)
 os.makedirs('data/silver', exist_ok=True)
+
+DATE = datetime.now().strftime('%Y%m%d')
 
 def clean_montant(s):
     return pd.to_numeric(
@@ -32,9 +36,13 @@ for annee, path in fichiers.items():
         df['annee']     = annee
         df['REM_clean'] = clean_montant(df['REM'])
         df['BSE_clean'] = clean_montant(df['BSE'])
+        df['loaded_at'] = DATE
         all_chunks.append(df)
         print(f'  {annee} : {len(df):,} lignes R06')
 
 combined = pd.concat(all_chunks, ignore_index=True)
+
+# Sauvegarde horodatee + fichier courant
+combined.to_csv(f'data/silver/J0_silver_openmedic_2021_2025_{DATE}.csv', index=False)
 combined.to_csv('data/silver/J0_silver_openmedic_2021_2025.csv', index=False)
-print(f'Shape finale : {combined.shape}')
+print(f'Shape finale : {combined.shape} — Date : {DATE}')

@@ -3,10 +3,13 @@ import pandas as pd
 import requests_cache
 from retry_requests import retry
 import os
+from datetime import datetime
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 os.chdir(ROOT)
 os.makedirs('data/silver', exist_ok=True)
+
+DATE = datetime.now().strftime('%Y%m%d')
 
 cache_session = requests_cache.CachedSession('.cache', expire_after=-1)
 retry_session = retry(cache_session, retries=5, backoff_factor=0.2)
@@ -58,13 +61,17 @@ for region, (lat, lon) in stations.items():
         "precipitation_sum":   daily.Variables(3).ValuesAsNumpy(),
         "wind_speed_10m_max":  daily.Variables(4).ValuesAsNumpy(),
     })
-    df['time']   = df['time'].dt.tz_localize(None)
-    df['region'] = region
-    df['aasqa']  = 0
-    df['source'] = 'Open-Meteo'
+    df['time']      = df['time'].dt.tz_localize(None)
+    df['region']    = region
+    df['aasqa']     = 0
+    df['source']    = 'Open-Meteo'
+    df['loaded_at'] = DATE
     all_dfs.append(df)
     print(f"    OK {len(df)} lignes")
 
 meteo = pd.concat(all_dfs, ignore_index=True)
+
+# Sauvegarde horodatee + fichier courant
+meteo.to_csv(f'data/silver/J0_silver_meteo_openmeteo_2021_2026_{DATE}.csv', index=False)
 meteo.to_csv('data/silver/J0_silver_meteo_openmeteo_2021_2026.csv', index=False)
-print(f"\nSauvegarde : {meteo.shape}")
+print(f"\nSauvegarde : {meteo.shape} — Date : {DATE}")

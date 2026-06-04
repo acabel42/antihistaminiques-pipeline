@@ -1,8 +1,13 @@
 import xarray as xr
 import pandas as pd
 import os
+from datetime import datetime
 
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+os.chdir(ROOT)
 os.makedirs('data/silver', exist_ok=True)
+
+DATE = datetime.now().strftime('%Y%m%d')
 
 ANNEES = {
     '2023': '2023-05-27',
@@ -27,8 +32,9 @@ def nc_to_df(annee, date_debut):
     df = df[['date','longitude','latitude',
              'aulne_conc','bouleau_conc','graminees_conc',
              'armoise_conc','olivier_conc','ambroisie_conc']]
-    df['annee']  = int(annee)
-    df['source'] = 'CAMS'
+    df['annee']     = int(annee)
+    df['source']    = 'CAMS'
+    df['loaded_at'] = DATE
     print(f'  {annee} : {df.shape} — {df.date.min().date()} -> {df.date.max().date()}')
     return df
 
@@ -37,6 +43,9 @@ if __name__ == '__main__':
     dfs = [nc_to_df(a, d) for a, d in ANNEES.items()]
     combined = pd.concat(dfs, ignore_index=True)
     combined = combined.dropna(subset=['graminees_conc'], how='all')
+
+    # Sauvegarde horodatee + fichier courant
+    combined.to_csv(f'data/silver/J0_silver_cams_pollen_2023_2026_{DATE}.csv', index=False)
     combined.to_csv('data/silver/J0_silver_cams_pollen_2023_2026.csv', index=False)
-    print(f'Shape : {combined.shape}')
+    print(f'Shape : {combined.shape} — Date : {DATE}')
     print(f'Periode : {combined.date.min().date()} -> {combined.date.max().date()}')

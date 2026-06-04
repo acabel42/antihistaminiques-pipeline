@@ -1,8 +1,12 @@
 import pandas as pd
 import os
+from datetime import datetime
 
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+os.chdir(ROOT)
 os.makedirs('data/silver', exist_ok=True)
 
+DATE = datetime.now().strftime('%Y%m%d')
 FILE = 'data/raw/260302-cada26v21-data-ansm-produits-2026.xlsx'
 
 produits   = pd.read_excel(FILE, sheet_name='produits')
@@ -33,6 +37,9 @@ df = df.merge(subst,      on='cis', how='left')
 df = df.merge(age_pivot,  on='cis', how='left')
 df = df.merge(sexe_pivot, on='cis', how='left')
 df['est_antihistaminique'] = df['code_atc'].str.startswith('R06A', na=False)
+df['loaded_at'] = DATE
 
+# Sauvegarde horodatee + fichier courant
+df.to_csv(f'data/silver/J0_silver_medicaments_{DATE}.csv', index=False)
 df.to_csv('data/silver/J0_silver_medicaments.csv', index=False)
-print(f'Shape : {df.shape} — R06A : {df.est_antihistaminique.sum()}')
+print(f'Shape : {df.shape} — R06A : {df.est_antihistaminique.sum()} — Date : {DATE}')
