@@ -1,0 +1,46 @@
+=== SOURCES DE DONNEES BRUTES — PROJET ANTIHISTAMINIQUES ===
+Date de collecte : 2026-06-04
+
+--- POLLEN ---
+RNSA (2021-2022) — Reseau National de Surveillance Aerobiologique
+URL : https://www.pollens.fr/les-risques/les-allergenes
+Format : CSV par station
+Fichier Silver : J0_silver_rnsa_2021_2022.csv
+
+CAMS (2023-2026) — Copernicus Atmosphere Monitoring Service
+URL : https://ads.atmosphere.copernicus.eu/datasets/cams-europe-air-quality-forecasts
+Format : NetCDF converti CSV
+Fichier Silver : J0_silver_cams_pollen_2023_2026.csv
+
+--- METEO ---
+Open-Meteo ERA5 (2021-2026)
+URL : https://archive-api.open-meteo.com/v1/archive
+API gratuite — pas de cle requise
+Fichier Silver : J0_silver_meteo_openmeteo_2021_2026.csv
+
+--- MEDICAMENTS ET RUPTURES ---
+ANSM — Agence Nationale de Securite du Medicament
+Medicaments R06 : https://ansm.sante.fr/disponibilites-des-produits-de-sante/medicaments
+Ruptures de stock : https://ansm.sante.fr/disponibilites-des-produits-de-sante/medicaments
+Format : CSV via data.gouv.fr
+Fichier Silver medicaments : J0_silver_medicaments.csv
+Fichier Silver ruptures : J0_silver_ruptures.csv
+
+--- CONSOMMATION ---
+Open Medic (2021-2025) — Assurance Maladie
+URL : https://assurance-maladie.ameli.fr/etudes-et-donnees/open-medic
+Format : CSV annuel
+Fichier Silver : J0_silver_openmedic_2021_2025.csv
+
+--- BASE DE DONNEES MEDICAMENTS ---
+BDPM — Base de Donnees Publique des Medicaments
+URL : https://base-donnees-publique.medicaments.gouv.fr/telechargement.php
+Format : CSV
+Fichier Silver : J0_silver_bdpm.csv
+
+=== NOTES ===
+- Toutes les sources sont publiques et librement accessibles
+- Aucune donnee personnelle — RGPD non applicable
+- Les fichiers Silver correspondent aux donnees nettoyees depuis ces sources
+- La couche Bronze n a pas ete conservee separement — simplification deliberee
+- Traçabilite assuree via Git — chaque commit est horodate

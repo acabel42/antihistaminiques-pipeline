@@ -9,7 +9,6 @@ __pycache__/
 .cdsapirc
 .ipynb_checkpoints/
 data/raw/
-data/bronze/
 J0_silver_cams_pollen_2023_2026.csv
 J0_silver_openmedic_2021_2025.csv
 old/

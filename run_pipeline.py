@@ -1,31 +1,80 @@
 import logging
 import os
+import sys
 
+# On se place à la racine du projet automatiquement
+# (évite le problème de chemins selon l'OS ou l'utilisateur)
+ROOT = os.path.abspath(os.path.dirname(__file__))
+os.chdir(ROOT)
+sys.path.insert(0, ROOT)
+
+# Configuration des logs : affichage terminal + fichier pipeline.log
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s — %(levelname)s — %(message)s'
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler('pipeline.log', encoding='utf-8')
+    ]
 )
 log = logging.getLogger(__name__)
 
+
 def run():
-    os.chdir('/Users/nellyta/Jedha')
-    log.info('=== PIPELINE ANTIHISTAMINIQUES ===')
+    log.info('=== PIPELINE ANTIHISTAMINIQUES - DEBUT ===')
 
-    # ÉTAPE 1 — NETTOYAGE SILVER
-    log.info('Etape 1 — Nettoyage medicaments + ruptures')
-    from src.cleaning.clean_medicaments_ruptures import clean_and_load
-    clean_and_load()
+    # ETAPE 1 - Nettoyage Silver
+    log.info('Etape 1 - Nettoyage OpenMedic + BDPM')
+    try:
+        from src.cleaning.clean_openmedic import clean_openmedic, clean_bdpm
+        clean_openmedic()
+        clean_bdpm()
+        log.info('OK - OpenMedic + BDPM')
+    except Exception as e:
+        log.error(f'ERREUR etape 1 openmedic : {e}')
+        raise
 
-    log.info('Etape 2 — Nettoyage Open Medic + BDPM')
-    from src.cleaning.clean_openmedic import clean_and_load as clean_openmedic
-    clean_openmedic()
+    log.info('Etape 1 - Nettoyage pollen + meteo')
+    try:
+        from src.cleaning.clean_pollen_meteo import clean_pollen, clean_meteo
+        clean_pollen()
+        clean_meteo()
+        log.info('OK - pollen + meteo')
+    except Exception as e:
+        log.error(f'ERREUR etape 1 pollen/meteo : {e}')
+        raise
 
-    log.info('Etape 3 — Nettoyage pollen + meteo')
-    from src.cleaning.clean_pollen_meteo import clean_pollen, clean_meteo
-    clean_pollen()
-    clean_meteo()
+    # ETAPE 2 - Construction Gold
+    log.info('Etape 2 - Construction gold_ml.csv')
+    try:
+        from src.transformations.build_gold import build_gold
+        build_gold()
+        log.info('OK - gold_ml.csv genere')
+    except Exception as e:
+        log.error(f'ERREUR etape 2 build_gold : {e}')
+        raise
 
-    log.info('=== PIPELINE TERMINE ===')
+    log.info('Etape 2 - Features avancees gold_ml_advanced.csv')
+    try:
+        from src.transformations.features_advanced import build_features_advanced
+        build_features_advanced()
+        log.info('OK - gold_ml_advanced.csv genere')
+    except Exception as e:
+        log.error(f'ERREUR etape 2 features_advanced : {e}')
+        raise
+
+    # ETAPE 3 - Entrainement ML
+    log.info('Etape 3 - Entrainement des modeles ML')
+    try:
+        from src.ml.train_model import train_model
+        train_model()
+        log.info('OK - modeles sauvegardes dans models/')
+    except Exception as e:
+        log.error(f'ERREUR etape 3 train_model : {e}')
+        raise
+
+    log.info('=== PIPELINE TERMINE - logs dans pipeline.log ===')
+
 
 if __name__ == '__main__':
     run()
