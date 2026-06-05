@@ -145,8 +145,6 @@ col2.plotly_chart(fig5, use_container_width=True)
 
 st.markdown("---")
 
-st.markdown("---")
-
 # ── Section 5 : Jointure médicaments × ruptures ─────────────
 st.subheader("🔗 Médicaments les plus prescrits en rupture")
 jointure = anti_med.merge(anti_rup, on='cis', how='inner')
