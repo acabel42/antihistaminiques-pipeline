@@ -347,8 +347,9 @@ with col_parts:
 idx_80 = int(np.searchsorted(cumsum_pct, 80))
 n_mol_80 = n - idx_80
 st.info(f"💡 **Indice de Gini : {gini:.2f}** — Marché très concentré. "
-        f"{n_mol_80} molécules sur {n} représentent 80% des volumes. "
-        f"Une rupture de Desloratadine impacte ~33% des patients allergiques.")
+        f"{n_mol_80} molécule{'s' if n_mol_80 > 1 else ''} sur {n} "
+        f"représente{'nt' if n_mol_80 > 1 else ''} 80% des volumes remboursés. "
+        f"Une rupture sur cette molécule dominante aurait un impact massif sur l'approvisionnement.")
 
 st.divider()
 st.caption("Source : CNAM OpenMedic 2021-2025 — Projet Antihistaminiques Jedha 2026 — Collègue 2")
