@@ -28,7 +28,7 @@ for annee, path in fichiers.items():
     print(f'Traitement {annee}...')
     chunks = []
     for chunk in pd.read_csv(path, sep=';', encoding='latin-1', chunksize=100000):
-        r = chunk[chunk['ATC4'].astype(str).str.startswith('R06', na=False)]
+        r = chunk[chunk['ATC4'].astype(str).str.startswith(('R06', 'R03', 'J01'), na=False)]
         if len(r) > 0:
             chunks.append(r)
     if chunks:
