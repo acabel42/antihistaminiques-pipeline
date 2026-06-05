@@ -300,7 +300,7 @@ cumsum = np.cumsum(volumes)
 cumsum_pct = cumsum / cumsum[-1] * 100
 n = len(cumsum_pct)
 x_pct = np.arange(1, n + 1) / n * 100
-gini = 1 - 2 * float(np.trapz(cumsum_pct / 100, x_pct / 100))
+gini = 1 - 2 * float(np.trapezoid(cumsum_pct / 100, x_pct / 100))
 
 col_lorenz, col_parts = st.columns(2)
 
