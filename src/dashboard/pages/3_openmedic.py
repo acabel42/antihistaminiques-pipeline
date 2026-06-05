@@ -352,4 +352,4 @@ st.info(f"💡 **Indice de Gini : {gini:.2f}** — Marché très concentré. "
         f"Une rupture sur cette molécule dominante aurait un impact massif sur l'approvisionnement.")
 
 st.divider()
-st.caption("Source : CNAM OpenMedic 2021-2025 — Projet Antihistaminiques Jedha 2026 — Collègue 2")
+st.caption("Projet Antihistaminiques — Jedha 2026 — LMN")
