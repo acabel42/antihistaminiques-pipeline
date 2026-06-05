@@ -16,3 +16,4 @@ J0_silver_rnsa_pollen.csv
 old/Power BI Dataset/
 .cache.sqlite
 python
+pipeline.log

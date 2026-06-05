@@ -2,6 +2,7 @@ import pandas as pd
 import joblib
 import os
 import logging
+import argparse
 from sqlalchemy import create_engine
 from datetime import datetime
 
@@ -22,18 +23,28 @@ FEATURES_CLF = [
     'mois', 'saison_allergies', 'source_encoded',
     'ruptures_lag1', 'gram_lag_mois', 'cumul_thermique'
 ]
-
 FEATURES_REG = [
     'gram_moy', 'gram_max', 'gram_roll7', 'nb_jours_pic',
     'temp_moy', 'precip', 'mois', 'saison_allergies'
 ]
 
-def predict():
-    logging.info("Generation des predictions...")
+def predict(classe_atc='R06'):
+    logging.info(f"Generation des predictions — classe {classe_atc}...")
 
-    gold_path = 'data/gold/gold_ml_advanced.csv' if os.path.exists(
-        'data/gold/gold_ml_advanced.csv') else 'data/gold/gold_ml.csv'
+    # Charger le Gold de la bonne classe
+    gold_path = f'data/gold/gold_ml_{classe_atc}.csv'
+    if not os.path.exists(gold_path):
+        gold_path = 'data/gold/gold_ml.csv'
+
     df = pd.read_csv(gold_path)
+
+    # Fusionner avec features_advanced pour les colonnes manquantes
+    adv_path = 'data/gold/gold_ml_advanced.csv'
+    if os.path.exists(adv_path):
+        adv = pd.read_csv(adv_path)[['annee_mois_str', 'cumul_thermique', 'gram_lag_mois', 'ruptures_lag1']]
+        df = df.merge(adv, on='annee_mois_str', how='left')
+        logging.info(f"  Features advanced fusionnees")
+
     logging.info(f"  Gold charge : {df.shape} depuis {gold_path}")
 
     clf = joblib.load('models/rf_classifier.joblib')
@@ -47,18 +58,23 @@ def predict():
     df['proba_rupture']  = clf.predict_proba(df[fc].fillna(0))[:, 1]
     df['pred_gram_next'] = reg.predict(df[fr].fillna(0))
     df['generated_at']   = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    df['classe_atc']     = classe_atc
 
     out = df[['annee_mois_str', 'pred_rupture', 'proba_rupture',
-              'pred_gram_next', 'generated_at']]
+              'pred_gram_next', 'generated_at', 'classe_atc']]
 
-    out.to_sql('gold_predictions', ENGINE, if_exists='replace', index=False)
+    # Sauvegarde fichier specifique + fichier courant
+    out.to_csv(f'data/gold/gold_predictions_{classe_atc}.csv', index=False)
     out.to_csv('data/gold/gold_predictions.csv', index=False)
+    out.to_sql(f'gold_predictions_{classe_atc}', ENGINE, if_exists='replace', index=False)
+    out.to_sql('gold_predictions', ENGINE, if_exists='replace', index=False)
 
     logging.info(f"  Predictions sauvegardees : {len(out)} mois")
     logging.info(f"  Mois a risque : {(out['pred_rupture']==1).sum()}")
-    logging.info(f"  Table gold_predictions dans PostgreSQL")
-
     return out
 
 if __name__ == '__main__':
-    predict()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--classe', default='R06', help='Classe ATC (R06, R03, J01)')
+    args = parser.parse_args()
+    predict(classe_atc=args.classe)

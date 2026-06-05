@@ -38,13 +38,19 @@ def build_features_pollen():
         pollen_daily[f'gram_roll{window}'] = pollen_daily['graminees'].rolling(window, min_periods=1).mean()
 
     # Lags autres taxons
-    pollen_daily['bouleau_lag7']     = pollen_daily['bouleau'].shift(7)
-    pollen_daily['ambroisie_lag7']   = pollen_daily['ambroisie'].shift(7)
+    pollen_daily['bouleau_lag7']   = pollen_daily['bouleau'].shift(7)
+    pollen_daily['ambroisie_lag7'] = pollen_daily['ambroisie'].shift(7)
+    pollen_daily['aulne_lag7']     = pollen_daily['aulne'].shift(7)
+    pollen_daily['armoise_lag7']   = pollen_daily['armoise'].shift(7)
+    pollen_daily['olivier_lag7']   = pollen_daily['olivier'].shift(7)
 
     # Flags pics pollen
     pollen_daily['flag_pic_pollen']    = (pollen_daily['graminees'] > 20).astype(int)
     pollen_daily['flag_pic_bouleau']   = (pollen_daily['bouleau'] > 15).astype(int)
     pollen_daily['flag_pic_ambroisie'] = (pollen_daily['ambroisie'] > 5).astype(int)
+    pollen_daily['flag_pic_armoise']   = (pollen_daily['armoise'] > 5).astype(int)
+    pollen_daily['flag_pic_olivier']   = (pollen_daily['olivier'] > 3).astype(int)
+    pollen_daily['flag_pic_aulne']     = (pollen_daily['aulne'] > 10).astype(int)
 
     # Variables temporelles
     pollen_daily['mois']             = pollen_daily['date'].dt.month
