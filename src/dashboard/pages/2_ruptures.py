@@ -200,3 +200,6 @@ if len(jointure) > 0:
 
 else:
     st.info("Pas de données disponibles pour cette classe ATC.")
+
+st.divider()
+st.caption("Projet Antihistaminiques — Jedha 2026 — LMN")
