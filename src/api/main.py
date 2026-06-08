@@ -7,7 +7,7 @@ import os
 # On charge le modèle une seule fois au démarrage de l'API
 # Pas besoin de le recharger à chaque requête
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-MODEL_PATH = os.path.join(ROOT, 'models', 'rf_classifier.joblib')
+MODEL_PATH = os.path.join(ROOT, 'models', 'R06', 'rf_classifier.joblib')
 model = joblib.load(MODEL_PATH)
 
 app = FastAPI(
