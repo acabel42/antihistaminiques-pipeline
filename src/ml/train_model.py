@@ -166,11 +166,125 @@ def train_model():
     lr_baseline = train_baseline(df)
     rf_reg, df_reg = train_regressor(df)
     rf_clf = train_classifier(df)
+    rf_clf_tuned = tune_classifier(df)
+    explain_classifier(df)
 
     print("\n=== PIPELINE ML TERMINE ===")
     print("  models/lr_baseline.joblib   — regression logistique baseline")
     print("  models/rf_regressor.joblib  — prediction graminees mois suivant")
     print("  models/rf_classifier.joblib — detection rupture/tension R06")
+
+from sklearn.model_selection import GridSearchCV
+
+def tune_classifier(df):
+    print("\n=== GRIDSEARCHCV - RF Classifier ===")
+
+    features_disponibles = [f for f in FEATURES_CLF if f in df.columns]
+    df_clf = df.dropna(subset=features_disponibles + ['target_rupture'])
+    X = df_clf[features_disponibles]
+    y = df_clf['target_rupture']
+
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42, stratify=y)
+
+    # Grille de paramètres à tester
+    param_grid = {
+        'n_estimators':     [100, 200, 300],
+        'max_depth':        [5, 10, 15, None],
+        'min_samples_split':[2, 5],
+    }
+
+    rf_base = RandomForestClassifier(
+        class_weight='balanced', random_state=42)
+
+    # cv=5 : 5 folds, scoring='roc_auc' car classe très déséquilibrée
+    # n_jobs=-1 : utilise tous les coeurs CPU disponibles
+    grid_search = GridSearchCV(
+        rf_base,
+        param_grid,
+        cv=5,
+        scoring='roc_auc',
+        n_jobs=-1,
+        verbose=1
+    )
+
+    print("  Lancement GridSearchCV (24 combinaisons x 5 folds)...")
+    grid_search.fit(X_train, y_train)
+
+    print(f"  Meilleurs paramètres : {grid_search.best_params_}")
+    print(f"  Meilleur ROC-AUC CV  : {grid_search.best_score_:.3f}")
+
+    # Évaluation sur le jeu de test
+    best_model = grid_search.best_estimator_
+    y_pred = best_model.predict(X_test)
+    y_prob = best_model.predict_proba(X_test)[:, 1]
+
+    print(classification_report(y_test, y_pred, zero_division=0))
+    print(f"  ROC-AUC test : {roc_auc_score(y_test, y_prob):.3f}")
+
+    # On écrase le modèle seulement si c'est meilleur qu'avant
+    roc_avant = 0.771
+    roc_apres = roc_auc_score(y_test, y_prob)
+    if roc_apres > roc_avant:
+        joblib.dump(best_model, 'models/rf_classifier.joblib')
+        print(f"  ✅ Modèle amélioré ({roc_avant:.3f} → {roc_apres:.3f}), sauvegardé")
+    else:
+        print(f"  ⚠️  Pas d'amélioration ({roc_apres:.3f} <= {roc_avant:.3f}), ancien modèle conservé")
+
+    return best_model
+
+import shap
+
+def explain_classifier(df):
+    print("\n=== SHAP - Explication RF Classifier ===")
+
+    features_disponibles = [f for f in FEATURES_CLF if f in df.columns]
+    df_clf = df.dropna(subset=features_disponibles + ['target_rupture'])
+    X = df_clf[features_disponibles]
+
+    # On charge le meilleur modèle sauvegardé
+    rf_clf = joblib.load('models/rf_classifier.joblib')
+
+    # TreeExplainer est fait pour les Random Forest - rapide et précis
+    explainer = shap.TreeExplainer(rf_clf)
+    shap_values = explainer.shap_values(X)
+
+    # Selon la version de SHAP, le format des shap_values change
+    # Si c'est un tableau 3D (n_samples, n_features, n_classes), on prend la classe 1
+    # Si c'est déjà une liste [classe_0, classe_1], on prend l'index 1
+    if isinstance(shap_values, np.ndarray) and shap_values.ndim == 3:
+        shap_rupture = shap_values[:, :, 1]
+    elif isinstance(shap_values, list):
+        shap_rupture = shap_values[1]
+    else:
+        shap_rupture = shap_values
+
+    print("  SHAP values calculées")
+
+    # Graphique 1 - bar plot : importance moyenne globale
+    plt.figure(figsize=(10, 6))
+    shap.summary_plot(
+        shap_rupture, X,
+        plot_type='bar',
+        show=False
+    )
+    plt.title('SHAP - Importance moyenne des features (rupture)')
+    plt.tight_layout()
+    plt.savefig('notebooks/shap_importance.png', dpi=150, bbox_inches='tight')
+    plt.close()
+    print("  Graphique sauvegardé : notebooks/shap_importance.png")
+
+    # Graphique 2 - beeswarm : impact de chaque valeur sur la prédiction
+    plt.figure(figsize=(10, 6))
+    shap.summary_plot(
+        shap_rupture, X,
+        show=False
+    )
+    plt.title('SHAP - Impact des features sur la prédiction rupture')
+    plt.tight_layout()
+    plt.savefig('notebooks/shap_beeswarm.png', dpi=150, bbox_inches='tight')
+    plt.close()
+    print("  Graphique sauvegardé : notebooks/shap_beeswarm.png")
 
 if __name__ == '__main__':
     train_model()
