@@ -294,6 +294,108 @@ except Exception as e:
 st.divider()
 
 # =====================
+# SECTION KPIs AVANCÉS
+# =====================
+st.subheader("🔬 KPIs Avancés")
+st.divider()
+
+col_k1, col_k2, col_k3 = st.columns(3)
+
+# ── KPI 1 : Ratio ruptures / boites par année ──────────────────────────────
+with col_k1:
+    st.markdown("**🎯 Taux de détection des ruptures par année**")
+    st.caption("Parmi les mois avec une vraie rupture, combien le modèle en a-t-il détectés ? Un taux élevé = peu de ruptures manquées.")
+
+    detect_df = df.groupby('annee').apply(
+        lambda g: pd.Series({
+            'vrais_positifs': ((g['pred_rupture']==1) & (g['target_rupture']==1)).sum(),
+            'total_ruptures': (g['target_rupture']==1).sum()
+        })
+    ).reset_index()
+
+    # Recall = vrais positifs / total ruptures réelles
+    detect_df['taux_detection'] = (
+        detect_df['vrais_positifs'] / detect_df['total_ruptures'].replace(0, 1) * 100
+    ).round(1)
+
+    fig_detect = px.bar(
+        detect_df, x='annee', y='taux_detection',
+        labels={'annee': 'Année', 'taux_detection': 'Taux de détection (%)'},
+        color='taux_detection',
+        color_continuous_scale='Greens',
+        text='taux_detection'
+    )
+    fig_detect.update_traces(texttemplate='%{text}%', textposition='outside')
+    fig_detect.update_coloraxes(showscale=False)
+    fig_detect.update_layout(height=300, yaxis=dict(range=[0, 110]))
+    st.plotly_chart(fig_detect, use_container_width=True)
+
+# ── KPI 2 : Trend annuel des probabilités de rupture ──────────────────────
+with col_k2:
+    st.markdown("**📈 Trend annuel — probabilité de rupture moyenne**")
+    st.caption("Évolution de la probabilité moyenne de rupture par année. Une tendance à la hausse indique une dégradation de la situation des stocks.")
+
+    trend_df = df.groupby('annee')['proba_pct'].mean().reset_index()
+    trend_df.columns = ['annee', 'proba_moy']
+
+    fig_trend = go.Figure()
+    fig_trend.add_trace(go.Scatter(
+        x=trend_df['annee'],
+        y=trend_df['proba_moy'],
+        mode='lines+markers',
+        line=dict(color='#2471a3', width=2),
+        marker=dict(size=8)
+    ))
+    # Ligne de référence à 50%
+    fig_trend.add_hline(y=50, line_dash='dash', line_color='red',
+                        annotation_text='Seuil 50%')
+    fig_trend.update_layout(
+        xaxis_title='Année',
+        yaxis_title='Probabilité moyenne (%)',
+        height=300
+    )
+    st.plotly_chart(fig_trend, use_container_width=True)
+
+# ── KPI 3 : Précision / Recall par mois ───────────────────────────────────
+with col_k3:
+    st.markdown("**🎯 Précision & Recall par mois**")
+    st.caption("Précision = quand le modèle dit rupture, a-t-il raison ? Recall = parmi les vraies ruptures, combien a-t-il détecté ?")
+
+    # Calcul précision et recall mois par mois sur toutes les années
+    def calc_precision_recall(group):
+        tp = ((group['pred_rupture'] == 1) & (group['target_rupture'] == 1)).sum()
+        fp = ((group['pred_rupture'] == 1) & (group['target_rupture'] == 0)).sum()
+        fn = ((group['pred_rupture'] == 0) & (group['target_rupture'] == 1)).sum()
+        precision = tp / (tp + fp) if (tp + fp) > 0 else 0
+        recall    = tp / (tp + fn) if (tp + fn) > 0 else 0
+        return pd.Series({'precision': round(precision, 2), 'recall': round(recall, 2)})
+
+    pr_df = df.groupby('mois').apply(calc_precision_recall).reset_index()
+    pr_df['mois_label'] = pr_df['mois'].map(mois_noms_court)
+
+    fig_pr = go.Figure()
+    fig_pr.add_trace(go.Scatter(
+        x=pr_df['mois_label'], y=pr_df['precision'],
+        mode='lines+markers', name='Précision',
+        line=dict(color='#2ecc71', width=2)
+    ))
+    fig_pr.add_trace(go.Scatter(
+        x=pr_df['mois_label'], y=pr_df['recall'],
+        mode='lines+markers', name='Recall',
+        line=dict(color='#e74c3c', width=2)
+    ))
+    fig_pr.update_layout(
+        xaxis_title='Mois',
+        yaxis_title='Score (0-1)',
+        yaxis=dict(range=[0, 1.1]),
+        legend=dict(x=0, y=1.1, orientation='h'),
+        height=300
+    )
+    st.plotly_chart(fig_pr, use_container_width=True)
+
+st.divider()
+
+# =====================
 # SECTION 6 — Courbe ROC
 # =====================
 st.subheader("📈 Courbe ROC — Performance du modèle")
