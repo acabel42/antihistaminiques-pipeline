@@ -96,8 +96,9 @@ with col2:
     st.metric("Probabilité max", f"{proba_max:.1f}%",
               help=f"Mois le plus à risque : {mois_max}")
 with col3:
-    st.metric("Précision modèle", "67%",
-              help="Precision du RF Classifier sur le jeu de test")
+    _prec = {"R06": "56%", "R03": "83%", "J01": "89%"}
+    st.metric("Précision modèle", _prec.get(code_atc, "67%"),
+              help="Accuracy du RF Classifier sur le jeu de test")
 with col4:
     roc_map = {'R06': '0.738', 'R03': '0.933', 'J01': '0.981'}
     st.metric("ROC-AUC CV", roc_map.get(code_atc, '0.771'),
@@ -272,18 +273,7 @@ try:
     if not os.path.exists(clf_path):
         clf_path = 'models/rf_classifier.joblib'
     clf = joblib.load(clf_path)
-    features_base = [
-        'gram_moy', 'gram_max', 'gram_roll7', 'gram_roll30', 'nb_jours_pic',
-        'bouleau_moy', 'ambroisie_moy', 'nb_jours_pic_bouleau',
-        'temp_moy', 'temp_max', 'temp_roll30',
-        'precip', 'wind', 'mois', 'saison_allergies', 'source_encoded',
-        'ruptures_lag1', 'gram_lag_mois', 'cumul_thermique'
-    ]
-    sentinelles_map = {
-        'R03': ['grippal_inc100_moy', 'grippal_inc100_max', 'ira_inc100_moy', 'ira_inc100_max'],
-        'J01': ['diarrhee_inc100_moy', 'diarrhee_inc100_max'],
-    }
-    features_disponibles = features_base + sentinelles_map.get(code_atc, [])
+    features_disponibles = list(clf.feature_names_in_)
     imp = pd.DataFrame({
         'feature': features_disponibles,
         'importance': clf.feature_importances_
