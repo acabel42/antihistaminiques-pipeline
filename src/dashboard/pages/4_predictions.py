@@ -313,4 +313,86 @@ except Exception as e:
     st.warning(f"Modèle non disponible : {e}")
 
 st.divider()
+
+# =====================
+# SECTION 6 — Prédiction en direct via API
+# =====================
+st.subheader("🔮 Prédiction en direct — Appel API")
+st.caption("Renseignez les conditions du mois à analyser. Le dashboard interroge l'API FastAPI qui charge le modèle et retourne une prédiction en temps réel.")
+
+import requests
+
+API_URL = "http://127.0.0.1:8000"
+
+col_f1, col_f2, col_f3 = st.columns(3)
+
+with col_f1:
+    st.markdown("**🌿 Pollen**")
+    gram_moy       = st.slider("Graminées moy (g/m³)", 0.0, 100.0, 10.0)
+    gram_max       = st.slider("Graminées max (g/m³)", 0.0, 200.0, 30.0)
+    ambroisie_moy  = st.slider("Ambroisie moy (g/m³)", 0.0, 50.0, 3.0)
+    bouleau_moy    = st.slider("Bouleau moy (g/m³)",   0.0, 50.0, 5.0)
+    nb_jours_pic   = st.slider("Jours pic graminées",  0, 31, 3)
+
+with col_f2:
+    st.markdown("**🌡️ Météo**")
+    temp_moy    = st.slider("Température moy (°C)", -5.0, 40.0, 18.0)
+    temp_max    = st.slider("Température max (°C)", -5.0, 45.0, 25.0)
+    precip      = st.slider("Précipitations (mm)",   0.0, 200.0, 40.0)
+    wind        = st.slider("Vent moy (km/h)",       0.0, 100.0, 12.0)
+
+with col_f3:
+    st.markdown("**📅 Contexte**")
+    mois_api           = st.slider("Mois", 1, 12, 5)
+    saison_allergies   = st.selectbox("Saison allergies", [0, 1], index=1)
+    ruptures_lag1      = st.selectbox("Rupture mois précédent", [0.0, 1.0], index=0)
+
+# Valeurs calculées automatiquement (moyennes raisonnables)
+gram_roll7         = gram_moy * 0.85
+gram_roll30        = gram_moy * 0.70
+gram_lag_mois      = gram_moy * 0.60
+cumul_thermique    = temp_moy * mois_api * 3.5
+nb_jours_pic_bouleau = max(0, int(bouleau_moy / 5))
+temp_roll30        = temp_moy - 1.5
+source_encoded     = 0.5
+
+if st.button("🚀 Lancer la prédiction", type="primary"):
+    payload = {
+        "gram_moy": gram_moy,
+        "gram_max": gram_max,
+        "gram_roll7": gram_roll7,
+        "gram_roll30": gram_roll30,
+        "nb_jours_pic": nb_jours_pic,
+        "bouleau_moy": bouleau_moy,
+        "ambroisie_moy": ambroisie_moy,
+        "nb_jours_pic_bouleau": nb_jours_pic_bouleau,
+        "temp_moy": temp_moy,
+        "temp_max": temp_max,
+        "temp_roll30": temp_roll30,
+        "precip": precip,
+        "wind": wind,
+        "mois": mois_api,
+        "saison_allergies": saison_allergies,
+        "source_encoded": source_encoded,
+        "ruptures_lag1": ruptures_lag1,
+        "gram_lag_mois": gram_lag_mois,
+        "cumul_thermique": cumul_thermique
+    }
+
+    try:
+        # Appel HTTP vers l'API FastAPI — Streamlit ne fait aucun calcul ML
+        response = requests.post(f"{API_URL}/predict", json=payload, timeout=5)
+        response.raise_for_status()
+        result = response.json()
+
+        if result["rupture_predite"] == 1:
+            st.error(f"🚨 {result['interpretation']} — probabilité : {result['probabilite_rupture']*100:.1f}%")
+        else:
+            st.success(f"✅ {result['interpretation']} — probabilité : {result['probabilite_rupture']*100:.1f}%")
+
+    except requests.exceptions.ConnectionError:
+        st.warning("⚠️ L'API FastAPI ne tourne pas. Lancez : uvicorn src.api.main:app --reload")
+    except Exception as e:
+        st.error(f"Erreur : {e}")
+
 st.caption("Projet Antihistaminiques — Jedha 2026 — LMN")
