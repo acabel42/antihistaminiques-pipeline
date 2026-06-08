@@ -303,6 +303,78 @@ except Exception as e:
 
 st.divider()
 
+# =====================
+# SECTION 6 — Courbe ROC
+# =====================
+st.subheader("📈 Courbe ROC — Performance du modèle")
+st.caption("La courbe ROC montre le compromis entre vrais positifs et faux positifs pour tous les seuils. Plus la courbe est proche du coin supérieur gauche, meilleur est le modèle. La diagonale pointillée = prédiction aléatoire.")
+
+from sklearn.metrics import roc_curve, auc
+
+try:
+    clf = joblib.load(f'models/{code_atc}/rf_classifier.joblib')
+
+    features_disponibles = [
+        'gram_moy', 'gram_max', 'gram_roll7', 'gram_roll30', 'nb_jours_pic',
+        'bouleau_moy', 'ambroisie_moy', 'nb_jours_pic_bouleau',
+        'temp_moy', 'temp_max', 'temp_roll30',
+        'precip', 'wind', 'mois', 'saison_allergies', 'source_encoded',
+        'ruptures_lag1', 'gram_lag_mois', 'cumul_thermique'
+    ]
+
+   # Pour R06 on utilise gold_ml_advanced qui a toutes les features
+    # Pour R03 et J01 on utilise leur gold respectif
+    if code_atc == 'R06':
+        gold_adv = pd.read_csv('data/gold/gold_ml_advanced.csv')
+    else:
+        gold_adv = pd.read_csv(f'data/gold/gold_ml_{code_atc}.csv')
+
+    # On garde seulement les features que le modèle ET le fichier ont en commun
+    features_model = list(clf.feature_names_in_)
+    features_disponibles = [f for f in features_model if f in gold_adv.columns]
+
+    df_roc = gold_adv.dropna(subset=features_disponibles + ['target_rupture'])
+    X_roc = df_roc[features_disponibles]
+    y_roc = df_roc['target_rupture']
+
+    # predict_proba donne la probabilité pour chaque seuil possible
+    y_prob_roc = clf.predict_proba(X_roc)[:, 1]
+    fpr, tpr, _ = roc_curve(y_roc, y_prob_roc)
+    roc_auc = auc(fpr, tpr)
+
+    fig_roc = go.Figure()
+
+    # Courbe ROC du modèle
+    fig_roc.add_trace(go.Scatter(
+        x=fpr, y=tpr,
+        mode='lines',
+        name=f'RF Classifier (AUC = {roc_auc:.3f})',
+        line=dict(color='#2471a3', width=2)
+    ))
+
+    # Diagonale = modèle aléatoire (référence)
+    fig_roc.add_trace(go.Scatter(
+        x=[0, 1], y=[0, 1],
+        mode='lines',
+        name='Aléatoire (AUC = 0.5)',
+        line=dict(color='gray', width=1, dash='dash')
+    ))
+
+    fig_roc.update_layout(
+        xaxis_title='Taux de faux positifs',
+        yaxis_title='Taux de vrais positifs',
+        legend=dict(x=0.6, y=0.1),
+        height=400
+    )
+
+    st.plotly_chart(fig_roc, use_container_width=True)
+    st.caption(f"💡 AUC = {roc_auc:.3f} — le modèle est {round(roc_auc*100 - 50)}% meilleur qu'une prédiction aléatoire")
+
+except Exception as e:
+    st.warning(f"Courbe ROC non disponible : {e}")
+
+st.divider()
+
 st.subheader("🔮 Prédiction en direct — Appel API")
 st.caption("Renseignez les conditions du mois à analyser. Le dashboard interroge l'API FastAPI qui charge le modèle et retourne une prédiction en temps réel.")
 
