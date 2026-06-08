@@ -283,10 +283,11 @@ try:
                      labels={'importance': 'Importance', 'feature': 'Variable'},
                      color='importance',
                      color_continuous_scale='Blues',
-                     title="Feature Importance — RF Classifier ruptures R06")
+                     title=f"Feature Importance — RF Classifier {code_atc}")
     fig_imp.update_coloraxes(colorbar_title="Importance")
     st.plotly_chart(fig_imp, use_container_width=True)
-    st.caption("💡 L'ambroisie et le bouleau sont les signaux les plus prédictifs des ruptures de stock")
+    _cap = {"R06": "ruptures_lag1 et les pollens sont les signaux les plus prédictifs pour les antihistaminiques", "R03": "ruptures_lag1 et les indicateurs grippaux sont les plus prédictifs pour les antiasthmatiques", "J01": "ruptures_lag1 et la diarrhee sont les plus prédictifs pour les antibiotiques"}
+    st.caption(f"💡 {_cap.get(code_atc, chr(32))}")
 
 except Exception as e:
     st.warning(f"Modèle non disponible : {e}")
