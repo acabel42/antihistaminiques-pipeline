@@ -16,11 +16,11 @@ logging.basicConfig(
 )
 log = logging.getLogger(__name__)
 
+CLASSES = ['R06', 'R03', 'J01']
 
 def run():
     log.info('=== PIPELINE ANTIHISTAMINIQUES - DEBUT ===')
 
-    # ETAPE 1 - Nettoyage Silver
     log.info('Etape 1 - Nettoyage medicaments + ruptures')
     try:
         from src.cleaning.clean_medicaments_ruptures import clean_and_load
@@ -50,68 +50,84 @@ def run():
         log.error(f'ERREUR etape 1 pollen/meteo : {e}')
         raise
 
-    # ETAPE 1b - Feature engineering pollen
-    log.info('Etape 1b - Feature engineering pollen')
+    log.info('Etape 1b - Ingestion ANSM disponibilites 2026')
+    try:
+        from src.ingestion.ingest_ruptures_ansm_2026 import run as ingest_ansm
+        ingest_ansm(
+            input_path='data/raw/export_disponibilites_ansm_2026.xlsx',
+            openmedic_path='data/silver/J0_silver_openmedic_2021_2025.csv',
+            output_path='data/silver/J0_silver_ruptures_ansm_2026.csv'
+        )
+        log.info('OK - J0_silver_ruptures_ansm_2026.csv genere')
+    except Exception as e:
+        log.warning(f'WARN etape 1b ANSM 2026 (non bloquant) : {e}')
+
+    log.info('Etape 1c - Ingestion donnees Sentinelles')
+    try:
+        from src.ingestion.ingest_sentinelles import run as ingest_sent
+        ingest_sent(output_path='data/silver/J0_silver_sentinelles.csv')
+        log.info('OK - J0_silver_sentinelles.csv genere')
+    except Exception as e:
+        log.warning(f'WARN etape 1c Sentinelles (non bloquant) : {e}')
+
+    log.info('Etape 1d - Feature engineering pollen')
     try:
         from src.transformations.features_pollen import build_features_pollen
         build_features_pollen()
         log.info('OK - pollen_meteo_features.csv genere')
     except Exception as e:
-        log.error(f'ERREUR etape 1b features_pollen : {e}')
+        log.error(f'ERREUR etape 1d features_pollen : {e}')
         raise
 
-    # ETAPE 2 - Construction Gold
-    log.info('Etape 2 - Construction gold_ml.csv')
+    log.info('Etape 2 - Construction Gold par classe ATC')
     try:
         from src.transformations.build_gold import build_gold
-        build_gold()
-        log.info('OK - gold_ml.csv genere')
+        for classe in CLASSES:
+            build_gold(classe_atc=classe)
+            log.info(f'OK - gold_ml_{classe}.csv genere')
     except Exception as e:
         log.error(f'ERREUR etape 2 build_gold : {e}')
         raise
 
-    log.info('Etape 2 - Features avancees gold_ml_advanced.csv')
+    log.info('Etape 2b - Features avancees gold_ml_advanced.csv')
     try:
         from src.transformations.features_advanced import build_features_advanced
         build_features_advanced()
         log.info('OK - gold_ml_advanced.csv genere')
     except Exception as e:
-        log.error(f'ERREUR etape 2 features_advanced : {e}')
+        log.error(f'ERREUR etape 2b features_advanced : {e}')
         raise
 
-    # ETAPE 2b - Load OLAP
-    log.info('Etape 2b - Chargement OLAP PostgreSQL')
+    log.info('Etape 2c - Chargement OLAP PostgreSQL')
     try:
         from src.transformations.load_olap import load_olap
         load_olap()
         log.info('OK - tables OLAP chargees')
     except Exception as e:
-        log.error(f'ERREUR etape 2b load_olap : {e}')
+        log.error(f'ERREUR etape 2c load_olap : {e}')
         raise
 
-    # ETAPE 3 - Entrainement ML
-    log.info('Etape 3 - Entrainement des modeles ML')
+    log.info('Etape 3 - Entrainement des modeles ML par classe')
     try:
         from src.ml.train_model import train_model
-        train_model()
-        log.info('OK - modeles sauvegardes dans models/')
+        for classe in CLASSES:
+            train_model(classe_atc=classe)
+            log.info(f'OK - modeles sauvegardes dans models/{classe}/')
     except Exception as e:
         log.error(f'ERREUR etape 3 train_model : {e}')
         raise
 
-   # ETAPE 4 — Predictions
-    log.info('Etape 4 - Generation predictions')
+    log.info('Etape 4 - Generation predictions par classe')
     try:
         from src.ml.predict import predict
-        for classe in ['R06', 'R03', 'J01']:
+        for classe in CLASSES:
             predict(classe_atc=classe)
-            log.info(f'OK - gold_predictions_{classe} genere')
+            log.info(f'OK - gold_predictions_{classe}.csv genere')
     except Exception as e:
         log.error(f'ERREUR etape 4 predict : {e}')
         raise
 
     log.info('=== PIPELINE TERMINE - logs dans pipeline.log ===')
-
 
 if __name__ == '__main__':
     run()
