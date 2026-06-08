@@ -14,7 +14,7 @@ ENGINE = create_engine(DB_URL)
 SENTINELLES_FEATURES = {
     'R03': ['grippal_inc100_moy', 'grippal_inc100_max',
             'ira_inc100_moy',     'ira_inc100_max'],
-    'J01': ['diarrhee_inc100_moy', 'diarrhee_inc100_max'],
+    'J01': ['diarrhee_inc100_moy', 'diarrhee_inc100_max', 'varicelle_inc100_moy', 'varicelle_inc100_max'],
     'R06': [],
 }
 
