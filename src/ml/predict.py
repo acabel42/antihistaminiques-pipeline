@@ -21,7 +21,11 @@ FEATURES_CLF = [
     'temp_moy', 'temp_max', 'temp_roll30',
     'precip', 'wind',
     'mois', 'saison_allergies', 'source_encoded',
-    'ruptures_lag1', 'gram_lag_mois', 'cumul_thermique'
+    'ruptures_lag1', 'gram_lag_mois', 'cumul_thermique',
+    'grippal_inc100_moy', 'grippal_inc100_max',
+    'ira_inc100_moy', 'ira_inc100_max',
+    'diarrhee_inc100_moy', 'diarrhee_inc100_max',
+    'varicelle_inc100_moy', 'varicelle_inc100_max',
 ]
 FEATURES_REG = [
     'gram_moy', 'gram_max', 'gram_roll7', 'nb_jours_pic',

@@ -26,7 +26,12 @@ FEATURES_CLF = [
     'temp_moy', 'temp_max', 'temp_roll30',
     'precip', 'wind',
     'mois', 'saison_allergies', 'source_encoded',
-    'ruptures_lag1', 'gram_lag_mois', 'cumul_thermique'
+    'ruptures_lag1', 'gram_lag_mois', 'cumul_thermique',
+    # Sentinelles (R03/J01 uniquement — ignorees si absent du Gold)
+    'grippal_inc100_moy', 'grippal_inc100_max',
+    'ira_inc100_moy', 'ira_inc100_max',
+    'diarrhee_inc100_moy', 'diarrhee_inc100_max',
+    'varicelle_inc100_moy', 'varicelle_inc100_max',
 ]
 
 def train_baseline(df, classe_atc="R06"):
