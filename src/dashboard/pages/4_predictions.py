@@ -417,10 +417,12 @@ try:
 
    # Pour R06 on utilise gold_ml_advanced qui a toutes les features
     # Pour R03 et J01 on utilise leur gold respectif
-    if code_atc == 'R06':
-        gold_adv = pd.read_csv('data/gold/gold_ml_advanced.csv')
-    else:
-        gold_adv = pd.read_csv(f'data/gold/gold_ml_{code_atc}.csv')
+    # Charger le gold par classe et fusionner avec features_advanced
+    gold_adv = pd.read_csv(f'data/gold/gold_ml_{code_atc}.csv')
+    adv_path = 'data/gold/gold_ml_advanced.csv'
+    if os.path.exists(adv_path):
+        adv = pd.read_csv(adv_path)[['annee_mois_str', 'cumul_thermique', 'gram_lag_mois', 'ruptures_lag1']]
+        gold_adv = gold_adv.merge(adv, on='annee_mois_str', how='left')
 
     # On garde seulement les features que le modèle ET le fichier ont en commun
     features_model = list(clf.feature_names_in_)
