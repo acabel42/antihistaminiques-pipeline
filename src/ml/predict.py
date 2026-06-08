@@ -47,9 +47,21 @@ def predict(classe_atc='R06'):
 
     logging.info(f"  Gold charge : {df.shape} depuis {gold_path}")
 
-    clf = joblib.load('models/rf_classifier.joblib')
-    reg = joblib.load('models/rf_regressor.joblib')
-    logging.info("  Modeles charges : rf_classifier + rf_regressor")
+    # Charger les modèles depuis le dossier de la classe
+    # Fallback vers models/ racine si le dossier classe n'existe pas encore
+    clf_path = f'models/{classe_atc}/rf_classifier.joblib'
+    reg_path = f'models/{classe_atc}/rf_regressor.joblib'
+
+    if not os.path.exists(clf_path):
+        logging.warning(f"  Modele {clf_path} absent — fallback models/rf_classifier.joblib")
+        clf_path = 'models/rf_classifier.joblib'
+    if not os.path.exists(reg_path):
+        logging.warning(f"  Modele {reg_path} absent — fallback models/rf_regressor.joblib")
+        reg_path = 'models/rf_regressor.joblib'
+
+    clf = joblib.load(clf_path)
+    reg = joblib.load(reg_path)
+    logging.info(f"  Modeles charges : {clf_path} + {reg_path}")
 
     fc = [f for f in FEATURES_CLF if f in df.columns]
     fr = [f for f in FEATURES_REG if f in df.columns]
