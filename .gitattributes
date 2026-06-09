@@ -1,3 +1,6 @@
+*.csv filter=lfs diff=lfs merge=lfs -text
+*.ipynb filter=lfs diff=lfs merge=lfs -text
+*.zip filter=lfs diff=lfs merge=lfs -text
 /old/Power[[:space:]]BI[[:space:]]Dataset/D04-Modeling_Data/Lectures/FactSales.csv filter=lfs diff=lfs merge=lfs -text
 /old/Power[[:space:]]BI[[:space:]]Dataset/D06-Prepare_PL_300/Project/archive.zip filter=lfs diff=lfs merge=lfs -text
 /old/Power[[:space:]]BI[[:space:]]Dataset/D06-Prepare_PL_300/Project/olist_geolocation_dataset.csv filter=lfs diff=lfs merge=lfs -text
