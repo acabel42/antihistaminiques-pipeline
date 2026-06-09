@@ -8,7 +8,7 @@ Projet Jedha Data Analysis Bootcamp — Prédiction des ruptures de stock d'anti
 
 Anticiper les pics de demande en antihistaminiques R06A pour détecter proactivement les risques de rupture de stock, en croisant :
 - les données de **consommation médicaments** (OpenMedic / CNAM)
-- les données **polliniques** (RNSA / ATMO / CAMS Copernicus)
+- les données **polliniques** (RNSA / CAMS Copernicus)
 - les données **météorologiques** (13 régions françaises — Open-Meteo)
 - les **signalements de ruptures** (ANSM 2021–2026)
 - les données **épidémiologiques** (Sentinelles INSERM — grippe, IRA 2021–2026)
