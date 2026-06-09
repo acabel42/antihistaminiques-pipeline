@@ -394,4 +394,4 @@ if len(volumes) > 1:
             f"Une rupture sur cette molécule dominante aurait un impact massif sur l'approvisionnement.")
 
 st.divider()
-st.caption("Projet Antihistaminiques — Jedha 2026 — LMN")
+st.caption(" Projet Antihistaminiques — Jedha 2026 — LMN ")
