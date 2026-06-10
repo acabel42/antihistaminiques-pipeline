@@ -274,19 +274,37 @@ try:
         clf_path = 'models/rf_classifier.joblib'
     clf = joblib.load(clf_path)
     features_disponibles = list(clf.feature_names_in_)
+
+    # --- MODIFICATION : slider pour choisir le nombre de features affichées ---
+    top_n = st.slider(
+        "Nombre de variables à afficher",
+        min_value=3,
+        max_value=len(features_disponibles),
+        value=5,  # valeur par défaut : top 5
+        step=1
+    )
+
     imp = pd.DataFrame({
         'feature': features_disponibles,
         'importance': clf.feature_importances_
-    }).sort_values('importance', ascending=True)
+    }).sort_values('importance', ascending=False)
 
-    fig_imp = px.bar(imp, x='importance', y='feature', orientation='h',
+    # on garde les top_n, puis on inverse pour que la plus importante soit en haut
+    imp_top = imp.head(top_n).sort_values('importance', ascending=True)
+
+    fig_imp = px.bar(imp_top, x='importance', y='feature', orientation='h',
                      labels={'importance': 'Importance', 'feature': 'Variable'},
                      color='importance',
                      color_continuous_scale='Blues',
-                     title=f"Feature Importance — RF Classifier {code_atc}")
+                     title=f"Top {top_n} variables — RF Classifier {code_atc}")
     fig_imp.update_coloraxes(colorbar_title="Importance")
     st.plotly_chart(fig_imp, use_container_width=True)
-    _cap = {"R06": "ruptures_lag1 et les pollens sont les signaux les plus prédictifs pour les antihistaminiques", "R03": "ruptures_lag1 et les indicateurs grippaux sont les plus prédictifs pour les antiasthmatiques", "J01": "ruptures_lag1 et la diarrhee sont les plus prédictifs pour les antibiotiques"}
+
+    _cap = {
+        "R06": "ruptures_lag1 et les pollens sont les signaux les plus prédictifs pour les antihistaminiques",
+        "R03": "ruptures_lag1 et les indicateurs grippaux sont les plus prédictifs pour les antiasthmatiques",
+        "J01": "ruptures_lag1 et la diarrhee sont les plus prédictifs pour les antibiotiques"
+    }
     st.caption(f"💡 {_cap.get(code_atc, chr(32))}")
 
 except Exception as e:
@@ -314,7 +332,6 @@ with col_k1:
         })
     ).reset_index()
 
-    # Recall = vrais positifs / total ruptures réelles
     detect_df['taux_detection'] = (
         detect_df['vrais_positifs'] / detect_df['total_ruptures'].replace(0, 1) * 100
     ).round(1)
@@ -347,7 +364,6 @@ with col_k2:
         line=dict(color='#2471a3', width=2),
         marker=dict(size=8)
     ))
-    # Ligne de référence à 50%
     fig_trend.add_hline(y=50, line_dash='dash', line_color='red',
                         annotation_text='Seuil 50%')
     fig_trend.update_layout(
@@ -362,7 +378,6 @@ with col_k3:
     st.markdown("**🎯 Précision & Recall par mois**")
     st.caption("Précision = quand le modèle dit rupture, a-t-il raison ? Recall = parmi les vraies ruptures, combien a-t-il détecté ?")
 
-    # Calcul précision et recall mois par mois sur toutes les années
     def calc_precision_recall(group):
         tp = ((group['pred_rupture'] == 1) & (group['target_rupture'] == 1)).sum()
         fp = ((group['pred_rupture'] == 1) & (group['target_rupture'] == 0)).sum()
@@ -407,24 +422,12 @@ from sklearn.metrics import roc_curve, auc
 try:
     clf = joblib.load(f'models/{code_atc}/rf_classifier.joblib')
 
-    features_disponibles = [
-        'gram_moy', 'gram_max', 'gram_roll7', 'gram_roll30', 'nb_jours_pic',
-        'bouleau_moy', 'ambroisie_moy', 'nb_jours_pic_bouleau',
-        'temp_moy', 'temp_max', 'temp_roll30',
-        'precip', 'wind', 'mois', 'saison_allergies', 'source_encoded',
-        'ruptures_lag1', 'gram_lag_mois', 'cumul_thermique'
-    ]
-
-   # Pour R06 on utilise gold_ml_advanced qui a toutes les features
-    # Pour R03 et J01 on utilise leur gold respectif
-    # Charger le gold par classe et fusionner avec features_advanced
     gold_adv = pd.read_csv(f'data/gold/gold_ml_{code_atc}.csv')
     adv_path = 'data/gold/gold_ml_advanced.csv'
     if os.path.exists(adv_path):
         adv = pd.read_csv(adv_path)[['annee_mois_str', 'cumul_thermique', 'gram_lag_mois', 'ruptures_lag1']]
         gold_adv = gold_adv.merge(adv, on='annee_mois_str', how='left')
 
-    # On garde seulement les features que le modèle ET le fichier ont en commun
     features_model = list(clf.feature_names_in_)
     features_disponibles = [f for f in features_model if f in gold_adv.columns]
 
@@ -432,36 +435,29 @@ try:
     X_roc = df_roc[features_disponibles]
     y_roc = df_roc['target_rupture']
 
-    # predict_proba donne la probabilité pour chaque seuil possible
     y_prob_roc = clf.predict_proba(X_roc)[:, 1]
     fpr, tpr, _ = roc_curve(y_roc, y_prob_roc)
     roc_auc = auc(fpr, tpr)
 
     fig_roc = go.Figure()
-
-    # Courbe ROC du modèle
     fig_roc.add_trace(go.Scatter(
         x=fpr, y=tpr,
         mode='lines',
         name=f'RF Classifier (AUC = {roc_auc:.3f})',
         line=dict(color='#2471a3', width=2)
     ))
-
-    # Diagonale = modèle aléatoire (référence)
     fig_roc.add_trace(go.Scatter(
         x=[0, 1], y=[0, 1],
         mode='lines',
         name='Aléatoire (AUC = 0.5)',
         line=dict(color='gray', width=1, dash='dash')
     ))
-
     fig_roc.update_layout(
         xaxis_title='Taux de faux positifs',
         yaxis_title='Taux de vrais positifs',
         legend=dict(x=0.6, y=0.1),
         height=400
     )
-
     st.plotly_chart(fig_roc, use_container_width=True)
     st.caption(f"💡 AUC = {roc_auc:.3f} — le modèle est {round(roc_auc*100 - 50)}% meilleur qu'une prédiction aléatoire")
 
@@ -475,8 +471,7 @@ st.caption("Renseignez les conditions du mois à analyser. Le dashboard interrog
 
 import requests
 
-API_URL = "http://127.0.0.1:8000"
-
+API_URL = "https://leobremond-antihistaminiques-api.hf.space"
 col_f1, col_f2, col_f3 = st.columns(3)
 
 with col_f1:
@@ -534,4 +529,3 @@ if st.button("🚀 Lancer la prédiction", type="primary"):
         st.error(f"Erreur : {e}")
 
 st.caption("Projet Antihistaminiques — Jedha 2026 — LMN")
-
