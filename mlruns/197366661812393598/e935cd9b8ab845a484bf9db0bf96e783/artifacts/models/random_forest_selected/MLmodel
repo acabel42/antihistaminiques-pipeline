@@ -1,0 +1,46 @@
+artifact_path: models/random_forest_selected
+flavors:
+  python_function:
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.sklearn
+    model_path: model.pkl
+    predict_fn: predict
+    python_version: 3.12.10
+  sklearn:
+    code: null
+    pickled_model: model.pkl
+    serialization_format: cloudpickle
+    sklearn_version: 1.6.1
+is_signature_from_type_hint: false
+mlflow_version: 2.22.0
+model_size_bytes: 218303
+model_uuid: f3835c5392274c048f9eae73e55c17f9
+prompts: null
+run_id: e935cd9b8ab845a484bf9db0bf96e783
+saved_input_example_info:
+  artifact_path: input_example.json
+  pandas_orient: split
+  serving_input_path: serving_input_example.json
+  type: dataframe
+signature:
+  inputs: '[{"type": "double", "name": "gram_moy", "required": true}, {"type": "double",
+    "name": "gram_max", "required": true}, {"type": "double", "name": "gram_roll7",
+    "required": true}, {"type": "double", "name": "gram_roll30", "required": true},
+    {"type": "double", "name": "nb_jours_pic", "required": true}, {"type": "double",
+    "name": "bouleau_moy", "required": true}, {"type": "double", "name": "ambroisie_moy",
+    "required": true}, {"type": "double", "name": "nb_jours_pic_bouleau", "required":
+    true}, {"type": "double", "name": "temp_moy", "required": true}, {"type": "double",
+    "name": "temp_max", "required": true}, {"type": "double", "name": "temp_roll30",
+    "required": true}, {"type": "double", "name": "precip", "required": true}, {"type":
+    "double", "name": "wind", "required": true}, {"type": "double", "name": "mois",
+    "required": true}, {"type": "double", "name": "saison_allergies", "required":
+    true}, {"type": "double", "name": "source_encoded", "required": true}, {"type":
+    "double", "name": "ruptures_lag1", "required": true}, {"type": "double", "name":
+    "gram_lag_mois", "required": true}, {"type": "double", "name": "cumul_thermique",
+    "required": true}]'
+  outputs: '[{"type": "tensor", "tensor-spec": {"dtype": "int64", "shape": [-1]}}]'
+  params: null
+type_hint_from_example: false
+utc_time_created: '2026-07-17 14:32:12.684217'

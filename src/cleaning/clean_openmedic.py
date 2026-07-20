@@ -7,7 +7,7 @@ load_dotenv()
 ENGINE = create_engine(os.getenv('DB_URL'))
 
 # ── Chemins vers les fichiers Silver ─────────────────────────────────────────
-PATH_OPENMEDIC = "data/silver/J0_silver_openmedic_2021_2025.csv"
+PATH_OPENMEDIC = "data/silver/J0_silver_openmedic_2021_2025_20260607.csv"
 PATH_BDPM      = "data/silver/J0_silver_bdpm.csv"
 
 # ── Dictionnaire de correspondance codes région → noms ───────────────────────

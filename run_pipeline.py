@@ -109,12 +109,12 @@ def run():
 
     log.info('Etape 3 - Entrainement des modeles ML par classe')
     try:
-        from src.ml.train_model import train_model
+        from src.ml.train_model_Copy import train_model
         for classe in CLASSES:
             train_model(classe_atc=classe)
             log.info(f'OK - modeles sauvegardes dans models/{classe}/')
     except Exception as e:
-        log.error(f'ERREUR etape 3 train_model : {e}')
+        log.error(f'ERREUR etape 3 train_model_Copy : {e}')
         raise
 
     log.info('Etape 4 - Generation predictions par classe')

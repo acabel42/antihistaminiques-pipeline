@@ -1,0 +1,15 @@
+artifact_uri: file:C:/Users/alexa/Desktop/Desktop/jedha/Projet_ML_Lead/antihistaminiques-pipeline/mlruns/197366661812393598/013bae49586b48278e35bee36ca9cc17/artifacts
+end_time: 1784501994394
+entry_point_name: ''
+experiment_id: '197366661812393598'
+lifecycle_stage: active
+run_id: 013bae49586b48278e35bee36ca9cc17
+run_name: Pipeline_R06
+run_uuid: 013bae49586b48278e35bee36ca9cc17
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1784501922379
+status: 3
+tags: []
+user_id: alexa

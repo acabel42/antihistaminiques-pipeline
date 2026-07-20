@@ -8,7 +8,7 @@ ENGINE = create_engine(os.getenv('DB_URL'))
 
 def clean_pollen():
     print("Nettoyage pollen...")
-    df = pd.read_csv('data/silver/J0_silver_cams_pollen_2023_2026.csv', low_memory=False)
+    df = pd.read_csv('data/silver/J0_silver_pollen_2021_2026.csv', low_memory=False)
     df['date'] = pd.to_datetime(df['date'], errors='coerce')
     df = df.dropna(subset=['date'])
     df = df.drop_duplicates()
@@ -36,7 +36,7 @@ def clean_meteo():
     return df
 
 if __name__ == '__main__':
-    os.chdir('/Users/nellyta/Jedha')
+    os.chdir(r'C:\Users\alexa\Desktop\Desktop\jedha\Projet_ML_Lead\antihistaminiques-pipeline')
     clean_pollen()
     clean_meteo()
     print("Done !")

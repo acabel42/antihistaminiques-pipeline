@@ -1,0 +1,14 @@
+aliases: []
+creation_timestamp: 1784297249834
+current_stage: None
+description: ''
+last_updated_timestamp: 1784297249834
+name: antihistaminiques_R06_classifier
+run_id: 4023908260d64aa286fb9b03d98d39b4
+run_link: ''
+source: file:C:/Users/alexa/Desktop/Desktop/jedha/Projet_ML_Lead/antihistaminiques-pipeline/mlruns/197366661812393598/4023908260d64aa286fb9b03d98d39b4/artifacts/models/random_forest_selected
+status: READY
+status_message: null
+storage_location: file:C:/Users/alexa/Desktop/Desktop/jedha/Projet_ML_Lead/antihistaminiques-pipeline/mlruns/197366661812393598/4023908260d64aa286fb9b03d98d39b4/artifacts/models/random_forest_selected
+user_id: null
+version: 2
